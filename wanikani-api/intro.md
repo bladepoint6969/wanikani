@@ -64,7 +64,9 @@ All of the responses have a few shared, high-level attributes: `object`,
 
 #### Object Types
 
-Every successful API response contains an object attribute that tells you which kind of thing you're getting. As mentioned before, there are two object types that return information on many different resources:
+Every successful API response contains an object attribute that tells you which
+kind of thing you're getting. As mentioned before, there are two object types
+that return information on many different resources:
 
 - `collection`: [Collection]
 - `report`: [summary::Summary]
