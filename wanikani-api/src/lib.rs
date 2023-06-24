@@ -470,7 +470,7 @@
 //! be unlocked or started, depending on the levels.
 //!
 
-use std::fmt::Display;
+use std::fmt::{Display, Debug};
 
 pub use chrono::{DateTime, Utc};
 use reqwest::Url;
@@ -491,6 +491,8 @@ const SUMMARY_PATH: &str = "summary";
 #[derive(Debug, Clone, Deserialize, Serialize)]
 /// Struct that contains fields common to all resources
 pub struct ResourceCommon {
+    /// An object's type
+    pub object: String,
     /// The URL of the request. For collections, that will contain all the
     /// filters and options you've passed to the API. Resources have a single
     /// URL and don't need to be filtered, so the URL will be the same in both
@@ -517,7 +519,7 @@ pub struct Pages {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 /// A collection of resources
-pub struct Collection {
+pub struct Collection<T> {
     #[serde(flatten)]
     /// Common resource data
     pub common: ResourceCommon,
@@ -526,7 +528,7 @@ pub struct Collection {
     /// The total count of resources in the collection
     pub total_count: u64,
     /// The collection's data
-    pub data: Vec<Resource>,
+    pub data: Vec<T>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -595,19 +597,6 @@ pub enum Error {
         /// The time when the rate limit should reset
         reset_time: Timestamp,
     },
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-#[serde(rename_all = "snake_case", tag = "object")]
-/// Possible resource types
-pub enum Resource {
-    /// Placeholder value for when no resource features are selected.
-    ///
-    /// This should never actually show up in reality.
-    None,
-    #[cfg(feature = "summary")]
-    /// A summary report
-    Report(summary::Summary),
 }
 
 /// The version of the API supported by this library

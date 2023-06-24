@@ -6,7 +6,7 @@ use chrono::{DateTime, NaiveDateTime, Utc};
 use reqwest::{header::HeaderMap, Client, RequestBuilder, Response, StatusCode};
 use url::Url;
 
-use crate::{Error, Resource, Timestamp, WanikaniError, API_VERSION, URL_BASE};
+use crate::{Error, Timestamp, WanikaniError, API_VERSION, URL_BASE};
 
 const REVISION_HEADER: &str = "Wanikani-Revision";
 
@@ -90,8 +90,8 @@ impl WKClient {
 
     #[cfg(feature = "summary")]
     /// Get a summary report of available and upcoming lessons and reviews.
-    pub async fn get_summary(&self) -> Result<Resource, Error> {
-        use crate::SUMMARY_PATH;
+    pub async fn get_summary(&self) -> Result<crate::summary::Summary, Error> {
+        use crate::{SUMMARY_PATH};
 
         let mut url = self.base_url.clone();
         url.path_segments_mut()
@@ -121,7 +121,7 @@ mod tests {
     use reqwest::Client;
 
     use super::WKClient;
-    use crate::{init_tests, Resource, Timestamp};
+    use crate::{init_tests, Timestamp};
 
     fn create_client() -> WKClient {
         WKClient::new(
@@ -147,9 +147,7 @@ mod tests {
 
         let client = create_client();
 
-        let Resource::Report(_summary) = client.get_summary().await.expect("Success") else {
-            panic!("Incorrect Resource received")
-        };
+        let _summary = client.get_summary().await.expect("Success");
     }
 
     #[cfg(feature = "summary")]

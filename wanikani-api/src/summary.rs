@@ -45,7 +45,7 @@ pub struct ReviewLessonSummary {
 mod tests {
     use chrono::{Duration, TimeZone, Utc};
 
-    use crate::{Resource, ResourceCommon};
+    use crate::{ResourceCommon};
 
     use super::{ReviewLessonSummary, Summary, SummaryData};
 
@@ -53,11 +53,7 @@ mod tests {
     fn test_summary_deserialize() {
         let json = include_str!("../test_files/summary.json");
 
-        let summary: Resource = serde_json::from_str(json).expect("Deserialize");
-
-        let Resource::Report(summary) = summary else {
-            panic!("Incorrect resource")
-        };
+        let summary: Summary = serde_json::from_str(json).expect("Deserialize");
 
         let expected_timestamp = Utc
             .with_ymd_and_hms(2018, 4, 11, 21, 0, 0)
@@ -101,8 +97,9 @@ mod tests {
             .with_ymd_and_hms(2023, 1, 1, 0, 0, 0)
             .single()
             .expect("Expected Timestamp");
-        let resource = Resource::Report(Summary {
+        let resource = Summary {
             common: ResourceCommon {
+                object: "report".into(),
                 data_updated_at: Some(timestamp),
                 url: "http://some.url/".parse().expect("URL"),
             },
@@ -114,7 +111,7 @@ mod tests {
                 }],
                 reviews: vec![],
             },
-        });
+        };
 
         let json = serde_json::to_string(&resource).expect("Serialization passes");
 
