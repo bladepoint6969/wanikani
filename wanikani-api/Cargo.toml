@@ -8,7 +8,7 @@ keywords = ["wanikani", "wk"]
 edition = "2021"
 categories = ["api-bindings"]
 repository = "https://github.com/bladepoint6969/wanikani"
-include = ["src/**/*.rs", "intro.md", "LICENSE-APACHE", "LICENSE-MIT"]
+include = ["src/**/*.rs", "LICENSE-APACHE", "LICENSE-MIT"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
