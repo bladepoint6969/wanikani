@@ -2,10 +2,9 @@
 
 use std::fmt::Debug;
 
-use async_recursion::async_recursion;
 use chrono::{DateTime, NaiveDateTime, Utc};
 use reqwest::{
-    header::{HeaderMap, HeaderValue},
+    header::{HeaderMap},
     Client, RequestBuilder, Response, StatusCode,
 };
 use url::Url;
@@ -51,21 +50,21 @@ impl WKClient {
     }
 
     fn rate_limit_reset(&self, headers: &HeaderMap) -> Timestamp {
-        let header_val = headers
-            .get("RateLimit-Reset")
-            .unwrap_or(
-                &HeaderValue::from_str({
-                    log::warn!("RateLimit-Reset header not found");
-                    "0"
+        let header_val = headers.get("Ratelimit-Reset");
+        let reset = match header_val {
+            Some(header_val) => {
+                let reset_str = header_val.to_str().expect("Header should be string");
+                reset_str.parse().unwrap_or_else(|_| {
+                    log::warn!("Ratelimit-Reset header is not a number, is \"{reset_str}\"");
+                    0
                 })
-                .expect("Valid Header"),
-            )
-            .to_owned();
-        let reset_str = header_val.to_str().expect("Header should be string");
-        let reset: i64 = reset_str.parse().unwrap_or({
-            log::warn!("RateLimit-Reset header is not a number, is \"{reset_str}\"");
-            0
-        });
+            }
+            None => {
+                log::warn!("Ratelimit-Reset header not found");
+                0
+            }
+        };
+
         let naive_datetime =
             NaiveDateTime::from_timestamp_millis(reset * 1000).expect("Valid range");
         DateTime::from_utc(naive_datetime, Utc)
@@ -91,11 +90,8 @@ impl WKClient {
     }
 
     #[cfg(feature = "summary")]
-    #[async_recursion]
     /// Get a summary report of available and upcoming lessons and reviews.
     pub async fn get_summary(&self) -> Result<Resource, Error> {
-        use reqwest::StatusCode;
-
         use crate::SUMMARY_PATH;
 
         let mut url = self.base_url.clone();
@@ -155,5 +151,32 @@ mod tests {
         let Resource::Report(_summary) = client.get_summary().await.expect("Success") else {
             panic!("Incorrect Resource received")
         };
+    }
+
+    #[cfg(feature = "summary")]
+    #[tokio::test]
+    #[ignore]
+    async fn test_rate_limiting() {
+        use crate::Error;
+
+        init_tests();
+
+        let client = create_client();
+
+        let error = loop {
+            if let Err(e) = client.get_summary().await {
+                break e;
+            }
+        };
+
+        let Error::RateLimit { error, reset_time } = error else {
+            panic!("Didn't get rate-limited");
+        };
+
+        let wait_period = reset_time - Utc::now();
+
+        assert_eq!(error.code, 429);
+        assert_eq!(error.error.expect("Some message"), "Rate limit exceeded");
+        assert!(wait_period.num_seconds() < 60);
     }
 }
