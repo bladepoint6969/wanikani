@@ -3,10 +3,7 @@
 use std::fmt::Debug;
 
 use chrono::{DateTime, NaiveDateTime, Utc};
-use reqwest::{
-    header::{HeaderMap},
-    Client, RequestBuilder, Response, StatusCode,
-};
+use reqwest::{header::HeaderMap, Client, RequestBuilder, Response, StatusCode};
 use url::Url;
 
 use crate::{Error, Resource, Timestamp, WanikaniError, API_VERSION, URL_BASE};
@@ -50,6 +47,8 @@ impl WKClient {
     }
 
     fn rate_limit_reset(&self, headers: &HeaderMap) -> Timestamp {
+        const MILLIS_IN_SECOND: i64 = 1000;
+
         let header_val = headers.get("Ratelimit-Reset");
         let reset = match header_val {
             Some(header_val) => {
@@ -66,7 +65,7 @@ impl WKClient {
         };
 
         let naive_datetime =
-            NaiveDateTime::from_timestamp_millis(reset * 1000).expect("Valid range");
+            NaiveDateTime::from_timestamp_millis(reset * MILLIS_IN_SECOND).expect("Valid range");
         DateTime::from_utc(naive_datetime, Utc)
     }
 
@@ -157,6 +156,9 @@ mod tests {
     #[tokio::test]
     #[ignore]
     async fn test_rate_limiting() {
+        use chrono::{DateTime, Local};
+        use tokio::time::Instant;
+
         use crate::Error;
 
         init_tests();
@@ -175,8 +177,24 @@ mod tests {
 
         let wait_period = reset_time - Utc::now();
 
+        log::info!(
+            "Reset time is {} Wait period is {wait_period}",
+            DateTime::<Local>::from(reset_time)
+        );
+
         assert_eq!(error.code, 429);
         assert_eq!(error.error.expect("Some message"), "Rate limit exceeded");
         assert!(wait_period.num_seconds() < 60);
+        assert!(wait_period.num_milliseconds() > 0);
+
+        tokio::time::sleep_until(
+            Instant::now()
+                + (wait_period + Duration::seconds(1))
+                    .to_std()
+                    .expect("Should be short"),
+        )
+        .await;
+
+        assert!(client.get_summary().await.is_ok())
     }
 }

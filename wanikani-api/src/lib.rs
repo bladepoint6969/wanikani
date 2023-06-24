@@ -113,6 +113,8 @@ pub enum Error {
     ///         let duration = (reset_time - Utc::now())
     ///             .to_std()
     ///             .expect("Reset time should be relatively short");
+    ///         // You may want to add some time onto this duration, to account for any
+    ///         // slight time differences between the API server and client
     ///         tokio::time::sleep_until(tokio::time::Instant::now() + duration).await
     ///     },
     /// // ...
