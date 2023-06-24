@@ -2,10 +2,9 @@
 //! reviews that will become available in the next 24 hours, grouped by the
 //! hour.
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use crate::ResourceCommon;
+use crate::{ResourceCommon, Timestamp};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 /// The summary report contains currently available lessons and reviews and the
@@ -26,7 +25,7 @@ pub struct SummaryData {
     pub lessons: Vec<ReviewLessonSummary>,
     /// Earliest date when the reviews are available. Is `None` when the user
     /// has no reviews scheduled.
-    pub next_reviews_at: Option<DateTime<Utc>>,
+    pub next_reviews_at: Option<Timestamp>,
     /// Details about subjects available for reviews now and in the next 24
     /// hours by the hour (total of 25 objects)
     pub reviews: Vec<ReviewLessonSummary>,
@@ -37,7 +36,7 @@ pub struct SummaryData {
 pub struct ReviewLessonSummary {
     /// When the paired `subject_ids` are available for lessons or review. All
     /// timestamps are the top of an hour.
-    pub available_at: DateTime<Utc>,
+    pub available_at: Timestamp,
     /// Collection of unique identifiers for `subjects`.
     pub subject_ids: Vec<u64>,
 }

@@ -6,10 +6,13 @@
 
 use std::fmt::Display;
 
-use chrono::{DateTime, Utc};
+pub use chrono::{DateTime, Utc};
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
+
+/// Convenience type for working with timestamps.
+pub type Timestamp = DateTime<Utc>;
 
 #[cfg(feature = "client")]
 pub mod client;
@@ -32,7 +35,7 @@ pub struct ResourceCommon {
     /// pagination. If no resources were returned for the specified scope, then
     /// this will be `null`. For a resource, then this is the last time that
     /// particular resource was updated.
-    pub data_updated_at: Option<DateTime<Utc>>,
+    pub data_updated_at: Option<Timestamp>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -90,6 +93,40 @@ pub enum Error {
     #[error("HTTP client error: {0}")]
     /// There was some error in the HTTP client.
     Client(#[from] reqwest::Error),
+    #[error("Wanikani error: {error}. Limit will reset at {reset_time}")]
+    /// Rate Limits have been exceeded. Please wait for the limit to reset.
+    ///
+    /// This enum includes timestamp information for when the rate limit should
+    /// reset. This can be used to pause requests until they will start
+    /// returning data again.
+    ///
+    /// ### Example:
+    ///
+    /// ```rust
+    /// # use wanikani_api::{Error, Utc, WanikaniError};
+    /// # use chrono::Duration;
+    /// # fn do_things() {}
+    /// # let error = Error::RateLimit { error: WanikaniError {code: 429, error: None}, reset_time: Utc::now() + Duration::seconds(10)};
+    /// # async {
+    /// match error {
+    ///     Error::RateLimit{error, reset_time} => {
+    ///         let duration = (reset_time - Utc::now())
+    ///             .to_std()
+    ///             .expect("Reset time should be relatively short");
+    ///         tokio::time::sleep_until(tokio::time::Instant::now() + duration).await
+    ///     },
+    /// // ...
+    /// #   error => {}
+    /// # }
+    /// # };
+    /// # Ok::<(), Error>(())
+    /// ```
+    RateLimit {
+        /// The error struct returned by Wanikani
+        error: WanikaniError,
+        /// The time when the rate limit should reset
+        reset_time: Timestamp,
+    },
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

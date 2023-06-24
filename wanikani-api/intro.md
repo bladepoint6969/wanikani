@@ -126,10 +126,6 @@ parameter with with the id you want to look after.
 If a cursor is outside the range of `id`s for the collection, an empty
 result set is returned for `data`.
 
-If you're using the [client::WKClient] to fetch collections, it will
-automatically follow these pagination links, and return a vector of
-resources instead of a collection.
-
 ##### Example
 
 Let’s say there are four resources with IDs of 1, 2, 3, 4.
