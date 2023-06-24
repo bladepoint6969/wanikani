@@ -1,0 +1,32 @@
+[package]
+name = "wanikani-api"
+version = "0.0.0"
+authors = ["Bennett Buckley <ben.buckley@outlook.com>"]
+description = "A Rust implementation of a Wanikani API client"
+license = "MIT OR Apache-2.0"
+keywords = ["wanikani", "wk"]
+edition = "2021"
+categories = ["api-bindings"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+async-recursion = "1.0.4"
+chrono = { version = "0.4.26", default-features = false, features = ["serde", "clock"] }
+log = "0.4.19"
+reqwest = { version = "0.11.18", features = ["json"], optional = true }
+serde = { version = "1.0.164", features = ["derive"] }
+thiserror = "1.0.40"
+tokio = { version = "1.28.2", features = ["time"] }
+url = { version = "2.4.0", features = ["serde"] }
+
+[features]
+default = ["client", "summary"]
+client = ["reqwest"]
+summary = []
+
+[dev-dependencies]
+dotenvy = "0.15.7"
+env_logger = "0.10.0"
+serde_json = "1.0.99"
+tokio = { version = "1.28.2", features = ["macros"] }
