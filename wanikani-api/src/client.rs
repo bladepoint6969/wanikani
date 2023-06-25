@@ -1,9 +1,10 @@
 //! HTTP client implementation for consuming the Wanikani API
 
-use std::fmt::Debug;
+use std::{any::type_name, fmt::Debug};
 
 use chrono::{DateTime, NaiveDateTime, Utc};
 use reqwest::{header::HeaderMap, Client, RequestBuilder, Response, StatusCode};
+use serde::Deserialize;
 use url::Url;
 
 use crate::{Error, Timestamp, WanikaniError, API_VERSION, URL_BASE};
@@ -87,12 +88,58 @@ impl WKClient {
             Err(e) => e.into(),
         }
     }
+
+    /// Fetch a resource by its URL.
+    ///
+    /// This can be used for easily following the `next_url` trail of
+    /// collections, or for refreshing a resource by its `url`.
+    ///
+    /// ### Example
+    /// ```rust
+    /// # use wanikani_api::{Collection, Error, voice_actor::VoiceActor, client::WKClient};
+    /// # let client = WKClient::new("MY_TOKEN".to_string(), reqwest::Client::default());
+    /// # async move {
+    /// let collection: Collection<VoiceActor> = client.get_voice_actors().await.unwrap();
+    ///
+    /// if let Some(ref url) = collection.pages.next_url {
+    ///     let next_collection: Collection<VoiceActor> = client
+    ///         .get_resource_by_url(url)
+    ///         .await
+    ///         .unwrap();
+    /// }
+    /// # };
+    pub async fn get_resource_by_url<T>(&self, url: &Url) -> Result<T, Error>
+    where
+        T: for<'de> Deserialize<'de>,
+    {
+        let fn_signature = format!("get_resource_by_url<{}>", type_name::<T>());
+
+        let req = self.client.get(url.to_owned());
+
+        self.do_request(&fn_signature, req).await
+    }
+
+    async fn do_request<T>(&self, caller: &str, req: RequestBuilder) -> Result<T, Error>
+    where
+        T: for<'de> Deserialize<'de>,
+    {
+        let req = self.add_required_headers(req);
+
+        log::debug!("{caller} request: {req:?}");
+
+        let resp = req.send().await?;
+
+        log::debug!("{caller} response: {resp:?}");
+
+        match resp.status() {
+            StatusCode::OK => Ok(resp.json().await?),
+            _ => Err(self.handle_error(resp).await),
+        }
+    }
 }
 
 #[cfg(feature = "summary")]
 mod summary {
-    use reqwest::StatusCode;
-
     use crate::{summary::Summary, Error};
 
     use super::WKClient;
@@ -107,26 +154,15 @@ mod summary {
                 .expect("Valid URL")
                 .push(SUMMARY_PATH);
 
-            let req = self.add_required_headers(self.client.get(url));
+            let req = self.client.get(url);
 
-            log::debug!("get_summary request: {req:?}");
-
-            let resp = req.send().await?;
-
-            log::debug!("get_summary response: {resp:?}");
-
-            match resp.status() {
-                StatusCode::OK => Ok(resp.json().await?),
-                _ => Err(self.handle_error(resp).await),
-            }
+            self.do_request("get_summary", req).await
         }
     }
 }
 
 #[cfg(feature = "user")]
 mod user {
-    use reqwest::StatusCode;
-
     use crate::{
         user::{UpdateUser, User},
         Error,
@@ -142,18 +178,9 @@ mod user {
             let mut url = self.base_url.clone();
             url.path_segments_mut().expect("Valid URL").push(USER_PATH);
 
-            let req = self.add_required_headers(self.client.get(url));
+            let req = self.client.get(url);
 
-            log::debug!("get_user_information request: {req:?}");
-
-            let resp = req.send().await?;
-
-            log::debug!("get_user_information response: {resp:?}");
-
-            match resp.status() {
-                StatusCode::OK => Ok(resp.json().await?),
-                _ => Err(self.handle_error(resp).await),
-            }
+            self.do_request("get_user_information", req).await
         }
 
         /// Returns an updated summary of user information.
@@ -161,26 +188,15 @@ mod user {
             let mut url = self.base_url.clone();
             url.path_segments_mut().expect("Valid URL").push(USER_PATH);
 
-            let req = self.add_required_headers(self.client.put(url).json(user));
+            let req = self.client.put(url).json(user);
 
-            log::debug!("update_user_information request: {req:?}");
-
-            let resp = req.send().await?;
-
-            log::debug!("update_user_information response: {resp:?}");
-
-            match resp.status() {
-                StatusCode::OK => Ok(resp.json().await?),
-                _ => Err(self.handle_error(resp).await),
-            }
+            self.do_request("update_user_information", req).await
         }
     }
 }
 
 #[cfg(feature = "voice_actor")]
 mod voice_actor {
-    use reqwest::StatusCode;
-
     use crate::{voice_actor::VoiceActor, Collection, Error};
 
     use super::WKClient;
@@ -194,18 +210,9 @@ mod voice_actor {
             let mut url = self.base_url.clone();
             url.path_segments_mut().expect("Valid URL").push(VO_PATH);
 
-            let req = self.add_required_headers(self.client.get(url));
+            let req = self.client.get(url);
 
-            log::debug!("get_voice_actors request: {req:?}");
-
-            let resp = req.send().await?;
-
-            log::debug!("get_voice_actors response: {resp:?}");
-
-            match resp.status() {
-                StatusCode::OK => Ok(resp.json().await?),
-                _ => Err(self.handle_error(resp).await),
-            }
+            self.do_request("get_voice_actors", req).await
         }
 
         /// Retrieves a specific voice_actor by its `id`.
@@ -216,18 +223,9 @@ mod voice_actor {
                 .push(VO_PATH)
                 .push(&id.to_string());
 
-            let req = self.add_required_headers(self.client.get(url));
+            let req = self.client.get(url);
 
-            log::debug!("get_voice_actors request: {req:?}");
-
-            let resp = req.send().await?;
-
-            log::debug!("get_voice_actors response: {resp:?}");
-
-            match resp.status() {
-                StatusCode::OK => Ok(resp.json().await?),
-                _ => Err(self.handle_error(resp).await),
-            }
+            self.do_request("get_specific_voice_actor", req).await
         }
     }
 }
