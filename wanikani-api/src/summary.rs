@@ -45,7 +45,7 @@ pub struct ReviewLessonSummary {
 mod tests {
     use chrono::{Duration, TimeZone, Utc};
 
-    use crate::{ResourceCommon};
+    use crate::ResourceCommon;
 
     use super::{ReviewLessonSummary, Summary, SummaryData};
 
@@ -97,7 +97,7 @@ mod tests {
             .with_ymd_and_hms(2023, 1, 1, 0, 0, 0)
             .single()
             .expect("Expected Timestamp");
-        let resource = Summary {
+        let summary = Summary {
             common: ResourceCommon {
                 object: "report".into(),
                 data_updated_at: Some(timestamp),
@@ -113,14 +113,18 @@ mod tests {
             },
         };
 
-        let json = serde_json::to_string(&resource).expect("Serialization passes");
+        let json = serde_json::to_string(&summary).expect("Serialization passes");
 
-        assert!(json.contains("\"object\":\"report\""));
-        assert!(json.contains("\"url\":\"http://some.url/\""));
-        assert!(json.contains("\"data_updated_at\":\"2023-01-01T00:00:00Z\""));
-        assert!(json.contains("\"next_reviews_at\":null"));
-        assert!(json.contains("\"available_at\":\"2023-01-01T00:00:00Z\""));
-        assert!(json.contains("\"subject_ids\":[1,2,3]"));
-        assert!(json.contains("\"reviews\":[]"));
+        let new_summary: Summary = serde_json::from_str(&json).expect("Deserialize");
+
+        assert_eq!(new_summary.common.object, "report");
+        assert_eq!(new_summary.common.url.to_string(), "http://some.url/");
+        assert_eq!(new_summary.common.data_updated_at, Some(timestamp));
+
+        assert!(new_summary.data.next_reviews_at.is_none());
+        assert!(new_summary.data.lessons.len() == 1);
+        assert_eq!(new_summary.data.lessons[0].available_at, timestamp);
+        assert_eq!(new_summary.data.lessons[0].subject_ids, [1, 2, 3]);
+        assert!(new_summary.data.reviews.is_empty());
     }
 }
