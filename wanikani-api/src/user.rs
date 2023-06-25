@@ -3,6 +3,7 @@
 
 use serde::{Deserialize, Serialize};
 use url::Url;
+use uuid::Uuid;
 
 use crate::{ResourceCommon, Timestamp};
 
@@ -21,7 +22,7 @@ pub struct User {
 /// Basic information for the user making the API request.
 pub struct UserData {
     /// The user's UUID.
-    pub id: String,
+    pub id: Uuid,
     /// If the user is on vacation, this will be the timestamp of when that
     /// vacation started. If the user is not on vacation, this is None.
     pub current_vacation_started_at: Option<Timestamp>,
@@ -200,7 +201,7 @@ mod tests {
         );
 
         let data = user.data;
-        assert_eq!(data.id, "5a6a5234-a392-4a87-8f3f-33342afe8a42");
+        assert_eq!(data.id, uuid::uuid!("5a6a5234-a392-4a87-8f3f-33342afe8a42"));
         assert_eq!(data.username, "example_user");
         assert_eq!(data.level, 5);
         assert_eq!(
@@ -255,7 +256,7 @@ mod tests {
             period_ends_at: None,
         };
         let data = UserData {
-            id: "00000000-0000-0000-0000-000000000000".into(),
+            id: uuid::uuid!("00000000-0000-0000-0000-000000000000"),
             username: "my_test_user".into(),
             level: 8,
             profile_url: Url::parse("https://www.wanikani.com/users/my_test_user").expect("URL"),
