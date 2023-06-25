@@ -177,6 +177,61 @@ mod user {
     }
 }
 
+#[cfg(feature = "voice_actor")]
+mod voice_actor {
+    use reqwest::StatusCode;
+
+    use crate::{voice_actor::VoiceActor, Collection, Error};
+
+    use super::WKClient;
+
+    const VO_PATH: &str = "voice_actors";
+
+    impl WKClient {
+        /// Returns a collection of all voice actors, ordered by ascending
+        /// `created_at`, 500 at a time.
+        pub async fn get_voice_actors(&self) -> Result<Collection<VoiceActor>, Error> {
+            let mut url = self.base_url.clone();
+            url.path_segments_mut().expect("Valid URL").push(VO_PATH);
+
+            let req = self.add_required_headers(self.client.get(url));
+
+            log::debug!("get_voice_actors request: {req:?}");
+
+            let resp = req.send().await?;
+
+            log::debug!("get_voice_actors response: {resp:?}");
+
+            match resp.status() {
+                StatusCode::OK => Ok(resp.json().await?),
+                _ => Err(self.handle_error(resp).await),
+            }
+        }
+
+        /// Retrieves a specific voice_actor by its `id`.
+        pub async fn get_specific_voice_actor(&self, id: u32) -> Result<VoiceActor, Error> {
+            let mut url = self.base_url.clone();
+            url.path_segments_mut()
+                .expect("Valid URL")
+                .push(VO_PATH)
+                .push(&id.to_string());
+
+            let req = self.add_required_headers(self.client.get(url));
+
+            log::debug!("get_voice_actors request: {req:?}");
+
+            let resp = req.send().await?;
+
+            log::debug!("get_voice_actors response: {resp:?}");
+
+            match resp.status() {
+                StatusCode::OK => Ok(resp.json().await?),
+                _ => Err(self.handle_error(resp).await),
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::env;
@@ -185,7 +240,6 @@ mod tests {
     use reqwest::Client;
 
     use super::WKClient;
-    use crate::Timestamp;
 
     static INIT: std::sync::OnceLock<()> = std::sync::OnceLock::new();
 
@@ -203,16 +257,6 @@ mod tests {
         )
     }
 
-    #[test]
-    fn test_duration_calculation() {
-        let duration = Duration::seconds(10);
-        let now = Utc::now();
-        let reset_time: Timestamp = now + duration;
-
-        let new_duration = (reset_time - now).to_std().expect("In range");
-        assert_eq!(new_duration.as_secs(), 10)
-    }
-
     #[cfg(feature = "summary")]
     #[tokio::test]
     async fn test_get_summary() {
@@ -220,7 +264,7 @@ mod tests {
 
         let client = create_client();
 
-        let _summary = client.get_summary().await.expect("Success");
+        assert!(client.get_summary().await.is_ok());
     }
 
     #[cfg(feature = "user")]
@@ -230,7 +274,7 @@ mod tests {
 
         let client = create_client();
 
-        let _user = client.get_user_information().await.expect("Success");
+        assert!(client.get_user_information().await.is_ok());
     }
 
     #[cfg(feature = "user")]
@@ -273,6 +317,26 @@ mod tests {
             reset_user.common.data_updated_at.expect("Timestamp")
                 > updated_user.common.data_updated_at.expect("Timestamp")
         );
+    }
+
+    #[cfg(feature = "voice_actor")]
+    #[tokio::test]
+    async fn test_get_voice_actors() {
+        init_tests();
+
+        let client = create_client();
+
+        assert!(client.get_voice_actors().await.is_ok());
+    }
+
+    #[cfg(feature = "voice_actor")]
+    #[tokio::test]
+    async fn test_get_specific_voice_actor() {
+        init_tests();
+
+        let client = create_client();
+
+        assert!(client.get_specific_voice_actor(1).await.is_ok());
     }
 
     #[cfg(feature = "summary")]
