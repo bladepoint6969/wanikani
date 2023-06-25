@@ -45,7 +45,7 @@ pub struct UserData {
 pub struct Preferences {
     /// The voice actor to be used for lessons and reviews. The value is
     /// associated to `subject.pronunciation_audios.metadata.voice_actor_id`.
-    pub default_voice_actor_id: u32,
+    pub default_voice_actor_id: u64,
     /// Automatically play pronunciation audio for vocabulary during extra
     /// study.
     pub extra_study_autoplay_audio: bool,
@@ -126,7 +126,7 @@ pub struct UpdateUser {
 pub struct UpdatePreferences {
     #[serde(skip_serializing_if = "Option::is_none")]
     /// The voice actor to be used for lessons and reviews.
-    pub default_voice_actor_id: Option<u32>,
+    pub default_voice_actor_id: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     /// Automatically play pronunciation audio for vocabulary during extra
     /// study.
