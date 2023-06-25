@@ -2,23 +2,11 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{ResourceCommon, Timestamp};
-
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
-/// A voice actor for vocabulary subject readings.
-pub struct VoiceActor {
-    /// The voice actor's unique ID.
-    pub id: u32,
-    #[serde(flatten)]
-    /// Common resource data.
-    pub common: ResourceCommon,
-    /// Voice actor data.
-    pub data: VoiceActorData,
-}
+use crate::{Timestamp};
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 /// Specific voice actor data
-pub struct VoiceActorData {
+pub struct VoiceActor {
     /// When the voice actor was first added.
     pub created_at: Timestamp,
     /// The voice actor's name.
@@ -43,14 +31,14 @@ mod tests {
     use url::Url;
 
     use crate::{
-        voice_actor::{Gender, VoiceActorData},
-        Collection, Pages, ResourceCommon, ResourceType,
+        voice_actor::{Gender},
+        Collection, Pages, ResourceCommon, ResourceType, Resource,
     };
 
     use super::VoiceActor;
 
     #[test]
-    fn test_user_deserialize() {
+    fn test_voice_actor_deserialize() {
         let json = include_str!("../test_files/voice_actors.json");
 
         let collection: Collection<VoiceActor> = serde_json::from_str(json).expect("Deserialize");
@@ -81,7 +69,7 @@ mod tests {
         let kyoko = data.get(0).expect("Exists");
         let kenichi = data.get(1).expect("Exists");
 
-        let kyoko_expected = VoiceActor {
+        let kyoko_expected = Resource::<VoiceActor> {
             id: 1,
             common: ResourceCommon {
                 object: ResourceType::VoiceActor,
@@ -92,7 +80,7 @@ mod tests {
                         .into(),
                 ),
             },
-            data: VoiceActorData {
+            data: VoiceActor {
                 created_at: DateTime::parse_from_rfc3339("2018-09-11T18:30:27.096474Z")
                     .expect("Timestamp")
                     .into(),
@@ -101,7 +89,7 @@ mod tests {
                 description: "Tokyo accent".into(),
             },
         };
-        let kenichi_expected = VoiceActor {
+        let kenichi_expected = Resource::<VoiceActor> {
             id: 2,
             common: ResourceCommon {
                 object: ResourceType::VoiceActor,
@@ -112,7 +100,7 @@ mod tests {
                         .into(),
                 ),
             },
-            data: VoiceActorData {
+            data: VoiceActor {
                 created_at: DateTime::parse_from_rfc3339("2018-09-11T18:30:28.089969Z")
                     .expect("Timestamp")
                     .into(),
@@ -128,7 +116,7 @@ mod tests {
 
     #[test]
     fn test_voice_actor_serialize() {
-        let data = VoiceActorData {
+        let data = VoiceActor {
             created_at: Utc::now(),
             description: "Some test actor".into(),
             gender: Gender::Male,
@@ -139,7 +127,7 @@ mod tests {
             url: Url::parse("https://api.wanikani.com/v2/voice_actors/69").expect("URL"),
             object: ResourceType::VoiceActor,
         };
-        let vo = VoiceActor {
+        let vo = Resource::<VoiceActor> {
             id: 69,
             common,
             data,
@@ -147,7 +135,7 @@ mod tests {
 
         let json = serde_json::to_string(&vo).expect("Serialize");
 
-        let new_vo: VoiceActor = serde_json::from_str(&json).expect("Deserialize");
+        let new_vo: Resource<VoiceActor> = serde_json::from_str(&json).expect("Deserialize");
         assert_eq!(new_vo, vo);
     }
 }

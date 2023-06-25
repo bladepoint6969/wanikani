@@ -197,7 +197,7 @@ mod user {
 
 #[cfg(feature = "voice_actor")]
 mod voice_actor {
-    use crate::{voice_actor::VoiceActor, Collection, Error};
+    use crate::{voice_actor::VoiceActor, Collection, Error, Resource};
 
     use super::WKClient;
 
@@ -216,7 +216,7 @@ mod voice_actor {
         }
 
         /// Retrieves a specific voice_actor by its `id`.
-        pub async fn get_specific_voice_actor(&self, id: u32) -> Result<VoiceActor, Error> {
+        pub async fn get_specific_voice_actor(&self, id: u32) -> Result<Resource<VoiceActor>, Error> {
             let mut url = self.base_url.clone();
             url.path_segments_mut()
                 .expect("Valid URL")

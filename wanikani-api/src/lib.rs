@@ -484,6 +484,9 @@ pub type Timestamp = DateTime<Utc>;
 #[cfg(feature = "client")]
 pub mod client;
 
+#[cfg(feature = "level_progression")]
+pub mod level_progression;
+
 #[cfg(feature = "summary")]
 pub mod summary;
 
@@ -499,6 +502,9 @@ pub mod voice_actor;
 pub enum ResourceType {
     /// A `collection`
     Collection,
+    #[cfg(feature = "level_progression")]
+    /// A `level_progression
+    LevelProgression,
     #[cfg(feature = "summary")]
     /// A Summary `report`
     Report,
@@ -540,6 +546,14 @@ pub struct Pages {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+pub struct Resource<T> {
+    pub id: u64,
+    #[serde(flatten)]
+    pub common: ResourceCommon,
+    pub data: T,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 /// A collection of resources
 pub struct Collection<T> {
     #[serde(flatten)]
@@ -550,7 +564,7 @@ pub struct Collection<T> {
     /// The total count of resources in the collection
     pub total_count: u64,
     /// The collection's data
-    pub data: Vec<T>,
+    pub data: Vec<Resource<T>>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
