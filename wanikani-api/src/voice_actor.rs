@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{Timestamp};
+use crate::Timestamp;
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 /// Specific voice actor data
@@ -30,10 +30,7 @@ mod tests {
     use chrono::{DateTime, Utc};
     use url::Url;
 
-    use crate::{
-        voice_actor::{Gender},
-        Collection, Pages, ResourceCommon, ResourceType, Resource,
-    };
+    use crate::{voice_actor::Gender, Collection, Pages, Resource, ResourceCommon, ResourceType};
 
     use super::VoiceActor;
 

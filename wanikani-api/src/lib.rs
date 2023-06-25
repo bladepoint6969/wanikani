@@ -546,10 +546,16 @@ pub struct Pages {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+/// A generic resource type.
+///
+/// Most resources returned by the WaniKani
 pub struct Resource<T> {
+    /// The resource's unique ID.
     pub id: u64,
     #[serde(flatten)]
+    /// Common resource data.
     pub common: ResourceCommon,
+    /// A resource's data
     pub data: T,
 }
 
@@ -568,7 +574,7 @@ pub struct Collection<T> {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
-/// The Wanikani API error object
+/// The WaniKani API error object
 pub struct WanikaniError {
     /// The numeric error code. This is likely going to match the HTTP status
     /// code.
@@ -591,14 +597,14 @@ impl std::error::Error for WanikaniError {}
 #[derive(Debug, Error)]
 /// Possible error conditions
 pub enum Error {
-    #[error("Wanikani error: {0}")]
-    /// An error was returned by Wanikani.
-    WanikaniError(#[from] WanikaniError),
+    #[error("WaniKani error: {0}")]
+    /// An error was returned by WaniKani.
+    WaniKaniError(#[from] WanikaniError),
     #[cfg(feature = "client")]
     #[error("HTTP client error: {0}")]
     /// There was some error in the HTTP client.
     Client(#[from] reqwest::Error),
-    #[error("Wanikani error: {error}. Limit will reset at {reset_time}")]
+    #[error("WaniKani error: {error}. Limit will reset at {reset_time}")]
     /// Rate Limits have been exceeded. Please wait for the limit to reset.
     ///
     /// This enum includes timestamp information for when the rate limit should
@@ -630,7 +636,7 @@ pub enum Error {
     /// # Ok::<(), Error>(())
     /// ```
     RateLimit {
-        /// The error struct returned by Wanikani
+        /// The error struct returned by WaniKani
         error: WanikaniError,
         /// The time when the rate limit should reset
         reset_time: Timestamp,
@@ -640,5 +646,5 @@ pub enum Error {
 /// The version of the API supported by this library
 pub const API_VERSION: &str = "20170710";
 
-/// The base URL of the Wanikani V2 API
+/// The base URL of the WaniKani V2 API
 pub const URL_BASE: &str = "https://api.wanikani.com/v2";

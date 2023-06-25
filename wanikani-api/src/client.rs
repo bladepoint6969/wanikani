@@ -1,4 +1,4 @@
-//! HTTP client implementation for consuming the Wanikani API
+//! HTTP client implementation for consuming the WaniKani API
 
 use std::{any::type_name, fmt::Debug};
 
@@ -11,7 +11,7 @@ use crate::{Error, Timestamp, WanikaniError, API_VERSION, URL_BASE};
 
 const REVISION_HEADER: &str = "Wanikani-Revision";
 
-/// The Wanikani client struct performs requests to the API.
+/// The WaniKani client struct performs requests to the API.
 pub struct WKClient {
     base_url: Url,
     token: String,
@@ -216,7 +216,10 @@ mod voice_actor {
         }
 
         /// Retrieves a specific voice_actor by its `id`.
-        pub async fn get_specific_voice_actor(&self, id: u32) -> Result<Resource<VoiceActor>, Error> {
+        pub async fn get_specific_voice_actor(
+            &self,
+            id: u32,
+        ) -> Result<Resource<VoiceActor>, Error> {
             let mut url = self.base_url.clone();
             url.path_segments_mut()
                 .expect("Valid URL")
