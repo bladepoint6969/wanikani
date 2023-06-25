@@ -96,12 +96,17 @@ impl WKClient {
     ///
     /// ### Example
     /// ```rust
-    /// # use wanikani_api::{Collection, Error, voice_actor::VoiceActor, client::WKClient};
+    /// # use wanikani_api::{Collection, Pages, Error, client::WKClient};
+    /// # type VoiceActor = serde_json::Value;
     /// # let client = WKClient::new("MY_TOKEN".to_string(), reqwest::Client::default());
     /// # async move {
-    /// let collection: Collection<VoiceActor> = client.get_voice_actors().await.unwrap();
+    /// # let pages = Pages {
+    /// #     next_url: Some("https://api.wanikani.com/v2/level_progressions".parse().unwrap()),
+    /// #     previous_url: None, per_page: 500};
+    /// // let collection: Collection<VoiceActor> = ...;
+    /// // let pages = collection.pages;
     ///
-    /// if let Some(ref url) = collection.pages.next_url {
+    /// if let Some(ref url) = pages.next_url {
     ///     let next_collection: Collection<VoiceActor> = client
     ///         .get_resource_by_url(url)
     ///         .await
@@ -218,7 +223,7 @@ mod voice_actor {
         /// Retrieves a specific voice_actor by its `id`.
         pub async fn get_specific_voice_actor(
             &self,
-            id: u32,
+            id: u64,
         ) -> Result<Resource<VoiceActor>, Error> {
             let mut url = self.base_url.clone();
             url.path_segments_mut()
@@ -233,11 +238,47 @@ mod voice_actor {
     }
 }
 
+#[cfg(feature = "level_progression")]
+mod level_progression {
+    use crate::{level_progression::LevelProgression, Collection, Error, Resource};
+
+    use super::WKClient;
+
+    const PROG_PATH: &str = "level_progressions";
+
+    impl WKClient {
+        /// Returns a collection of all level progressions, ordered by ascending
+        /// `created_at`, 500 at a time.
+        pub async fn get_level_progressions(&self) -> Result<Collection<LevelProgression>, Error> {
+            let mut url = self.base_url.clone();
+            url.path_segments_mut().expect("Valid URL").push(PROG_PATH);
+
+            let req = self.client.get(url);
+
+            self.do_request("get_level_progressions", req).await
+        }
+
+        /// Retrieves a specific level progression by its id.
+        pub async fn get_specific_level_progression(
+            &self,
+            id: u64,
+        ) -> Result<Resource<LevelProgression>, Error> {
+            let mut url = self.base_url.clone();
+            url.path_segments_mut()
+                .expect("Valid URL")
+                .push(PROG_PATH)
+                .push(&id.to_string());
+
+            let req = self.client.get(url);
+
+            self.do_request("get_specific_level_progression", req).await
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::env;
-
-    use chrono::{Duration, Utc};
     use reqwest::Client;
 
     use super::WKClient;
@@ -340,11 +381,35 @@ mod tests {
         assert!(client.get_specific_voice_actor(1).await.is_ok());
     }
 
+    #[cfg(feature = "level_progression")]
+    #[tokio::test]
+    async fn test_get_level_progressions() {
+        init_tests();
+
+        let client = create_client();
+
+        assert!(client.get_level_progressions().await.is_ok());
+    }
+
+    #[cfg(feature = "level_progression")]
+    #[tokio::test]
+    async fn test_get_specific_level_progression() {
+        init_tests();
+
+        let client = create_client();
+        let id = env::var("LEVEL_PROGRESSION_ID")
+            .expect("LEVEL_PROGRESSION_ID set")
+            .parse()
+            .expect("LEVEL_PROGRESSION_ID is u64");
+
+        assert!(client.get_specific_level_progression(id).await.is_ok());
+    }
+
     #[cfg(feature = "summary")]
     #[tokio::test]
     #[ignore]
     async fn test_rate_limiting() {
-        use chrono::{DateTime, Local};
+        use chrono::{DateTime, Local, Utc, Duration};
         use tokio::time::Instant;
 
         use crate::Error;
