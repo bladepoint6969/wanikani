@@ -2,11 +2,13 @@
 authors = ["Bennett Buckley <ben.buckley@outlook.com>"]
 categories = ["api-bindings"]
 description = "A Rust implementation of a Wanikani API client"
+documentation = "https://docs.rs/wanikani-api"
 edition = "2021"
-include = ["src/**/*.rs", "LICENSE-APACHE", "LICENSE-MIT"]
+include = ["src/**/*.rs", "LICENSE-APACHE", "LICENSE-MIT", "README.md"]
 keywords = ["wanikani", "wk"]
 license = "MIT OR Apache-2.0"
 name = "wanikani-api"
+readme = "README.md"
 repository = "https://github.com/bladepoint6969/wanikani"
 version = "0.0.0"
 
