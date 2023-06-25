@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{ResourceCommon, Timestamp};
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 /// The summary report contains currently available lessons and reviews and the
 /// reviews that will become available in the next 24 hours, grouped by the
 /// hour.
@@ -18,7 +18,7 @@ pub struct Summary {
     pub data: SummaryData,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 /// Summary report data
 pub struct SummaryData {
     /// Details about subjects available for lessons.
@@ -31,7 +31,7 @@ pub struct SummaryData {
     pub reviews: Vec<ReviewLessonSummary>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 /// Summary of available lessons, or of an upcoming review period
 pub struct ReviewLessonSummary {
     /// When the paired `subject_ids` are available for lessons or review. All
@@ -117,14 +117,6 @@ mod tests {
 
         let new_summary: Summary = serde_json::from_str(&json).expect("Deserialize");
 
-        assert_eq!(new_summary.common.object, "report");
-        assert_eq!(new_summary.common.url.to_string(), "http://some.url/");
-        assert_eq!(new_summary.common.data_updated_at, Some(timestamp));
-
-        assert!(new_summary.data.next_reviews_at.is_none());
-        assert!(new_summary.data.lessons.len() == 1);
-        assert_eq!(new_summary.data.lessons[0].available_at, timestamp);
-        assert_eq!(new_summary.data.lessons[0].subject_ids, [1, 2, 3]);
-        assert!(new_summary.data.reviews.is_empty());
+        assert_eq!(new_summary, summary);
     }
 }

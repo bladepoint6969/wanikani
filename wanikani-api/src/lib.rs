@@ -470,12 +470,12 @@
 //! be unlocked or started, depending on the levels.
 //!
 
-use std::fmt::{Display, Debug};
+use std::fmt::{Debug, Display};
 
 pub use chrono::{DateTime, Utc};
-use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
+use url::Url;
 
 /// Convenience type for working with timestamps.
 pub type Timestamp = DateTime<Utc>;
@@ -486,9 +486,10 @@ pub mod client;
 #[cfg(feature = "summary")]
 pub mod summary;
 
-const SUMMARY_PATH: &str = "summary";
+#[cfg(feature = "user")]
+pub mod user;
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 /// Struct that contains fields common to all resources
 pub struct ResourceCommon {
     /// An object's type
@@ -506,7 +507,7 @@ pub struct ResourceCommon {
     pub data_updated_at: Option<Timestamp>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 /// Pagination information for collections
 pub struct Pages {
     /// The URL for the next page of resources, if one exists.
@@ -517,7 +518,7 @@ pub struct Pages {
     pub per_page: u32,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 /// A collection of resources
 pub struct Collection<T> {
     #[serde(flatten)]
@@ -531,7 +532,7 @@ pub struct Collection<T> {
     pub data: Vec<T>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 /// The Wanikani API error object
 pub struct WanikaniError {
     /// The numeric error code. This is likely going to match the HTTP status
@@ -558,6 +559,7 @@ pub enum Error {
     #[error("Wanikani error: {0}")]
     /// An error was returned by Wanikani.
     WanikaniError(#[from] WanikaniError),
+    #[cfg(feature = "client")]
     #[error("HTTP client error: {0}")]
     /// There was some error in the HTTP client.
     Client(#[from] reqwest::Error),
@@ -604,14 +606,3 @@ pub const API_VERSION: &str = "20170710";
 
 /// The base URL of the Wanikani V2 API
 pub const URL_BASE: &str = "https://api.wanikani.com/v2";
-
-#[cfg(test)]
-static INIT: std::sync::OnceLock<()> = std::sync::OnceLock::new();
-
-#[cfg(test)]
-fn init_tests() {
-    INIT.get_or_init(|| {
-        dotenvy::dotenv().ok();
-        env_logger::init()
-    });
-}

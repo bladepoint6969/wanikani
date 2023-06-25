@@ -25,8 +25,9 @@ url = {version = "2.4.0", features = ["serde"]}
 [features]
 client = ["reqwest"]
 default = ["client", "model"]
-model = ["summary"]
+model = ["summary", "user"]
 summary = []
+user = []
 
 [dev-dependencies]
 dotenvy = "0.15.7"

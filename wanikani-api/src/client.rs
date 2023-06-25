@@ -87,28 +87,92 @@ impl WKClient {
             Err(e) => e.into(),
         }
     }
+}
 
-    #[cfg(feature = "summary")]
-    /// Get a summary report of available and upcoming lessons and reviews.
-    pub async fn get_summary(&self) -> Result<crate::summary::Summary, Error> {
-        use crate::{SUMMARY_PATH};
+#[cfg(feature = "summary")]
+mod summary {
+    use reqwest::StatusCode;
 
-        let mut url = self.base_url.clone();
-        url.path_segments_mut()
-            .expect("Valid URL")
-            .push(SUMMARY_PATH);
+    use crate::{summary::Summary, Error};
 
-        let req = self.add_required_headers(self.client.get(url));
+    use super::WKClient;
 
-        log::debug!("get_summary request: {req:?}");
+    const SUMMARY_PATH: &str = "summary";
 
-        let resp = req.send().await?;
+    impl WKClient {
+        /// Get a summary report of available and upcoming lessons and reviews.
+        pub async fn get_summary(&self) -> Result<Summary, Error> {
+            let mut url = self.base_url.clone();
+            url.path_segments_mut()
+                .expect("Valid URL")
+                .push(SUMMARY_PATH);
 
-        log::debug!("get_summary response: {resp:?}");
+            let req = self.add_required_headers(self.client.get(url));
 
-        match resp.status() {
-            StatusCode::OK => Ok(resp.json().await?),
-            _ => Err(self.handle_error(resp).await),
+            log::debug!("get_summary request: {req:?}");
+
+            let resp = req.send().await?;
+
+            log::debug!("get_summary response: {resp:?}");
+
+            match resp.status() {
+                StatusCode::OK => Ok(resp.json().await?),
+                _ => Err(self.handle_error(resp).await),
+            }
+        }
+    }
+}
+
+#[cfg(feature = "user")]
+mod user {
+    use reqwest::StatusCode;
+
+    use crate::{
+        user::{UpdateUser, User},
+        Error,
+    };
+
+    use super::WKClient;
+
+    const USER_PATH: &str = "user";
+
+    impl WKClient {
+        /// Returns a summary of user information.
+        pub async fn get_user_information(&self) -> Result<User, Error> {
+            let mut url = self.base_url.clone();
+            url.path_segments_mut().expect("Valid URL").push(USER_PATH);
+
+            let req = self.add_required_headers(self.client.get(url));
+
+            log::debug!("get_user_information request: {req:?}");
+
+            let resp = req.send().await?;
+
+            log::debug!("get_user_information response: {resp:?}");
+
+            match resp.status() {
+                StatusCode::OK => Ok(resp.json().await?),
+                _ => Err(self.handle_error(resp).await),
+            }
+        }
+
+        /// Returns an updated summary of user information.
+        pub async fn update_user_information(&self, user: &UpdateUser) -> Result<User, Error> {
+            let mut url = self.base_url.clone();
+            url.path_segments_mut().expect("Valid URL").push(USER_PATH);
+
+            let req = self.add_required_headers(self.client.put(url).json(user));
+
+            log::debug!("update_user_information request: {req:?}");
+
+            let resp = req.send().await?;
+
+            log::debug!("update_user_information response: {resp:?}");
+
+            match resp.status() {
+                StatusCode::OK => Ok(resp.json().await?),
+                _ => Err(self.handle_error(resp).await),
+            }
         }
     }
 }
@@ -121,7 +185,16 @@ mod tests {
     use reqwest::Client;
 
     use super::WKClient;
-    use crate::{init_tests, Timestamp};
+    use crate::Timestamp;
+
+    static INIT: std::sync::OnceLock<()> = std::sync::OnceLock::new();
+
+    fn init_tests() {
+        INIT.get_or_init(|| {
+            dotenvy::dotenv().ok();
+            env_logger::init()
+        });
+    }
 
     fn create_client() -> WKClient {
         WKClient::new(
@@ -148,6 +221,58 @@ mod tests {
         let client = create_client();
 
         let _summary = client.get_summary().await.expect("Success");
+    }
+
+    #[cfg(feature = "user")]
+    #[tokio::test]
+    async fn test_get_user_information() {
+        init_tests();
+
+        let client = create_client();
+
+        let _user = client.get_user_information().await.expect("Success");
+    }
+
+    #[cfg(feature = "user")]
+    #[tokio::test]
+    async fn test_update_user_information() {
+        use crate::user::{UpdatePreferences, UpdateUser};
+
+        init_tests();
+
+        let client = create_client();
+
+        let user = client.get_user_information().await.expect("Success");
+
+        let preferences = UpdatePreferences {
+            default_voice_actor_id: Some(2),
+            ..user.data.preferences.into()
+        };
+        let mut update = UpdateUser { preferences };
+
+        let updated_user = client
+            .update_user_information(&update)
+            .await
+            .expect("Success");
+
+        assert_ne!(updated_user, user);
+        assert_eq!(updated_user.data.preferences.default_voice_actor_id, 2);
+        assert!(
+            updated_user.common.data_updated_at.expect("Timestamp")
+                > user.common.data_updated_at.expect("Timestamp")
+        );
+
+        update.preferences = user.data.preferences.into();
+        let reset_user = client
+            .update_user_information(&update)
+            .await
+            .expect("Success");
+
+        assert_eq!(reset_user.data, user.data);
+        assert!(
+            reset_user.common.data_updated_at.expect("Timestamp")
+                > updated_user.common.data_updated_at.expect("Timestamp")
+        );
     }
 
     #[cfg(feature = "summary")]
