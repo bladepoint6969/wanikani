@@ -45,7 +45,7 @@ pub struct ReviewLessonSummary {
 mod tests {
     use chrono::{Duration, TimeZone, Utc};
 
-    use crate::ResourceCommon;
+    use crate::{ResourceCommon, ResourceType};
 
     use super::{ReviewLessonSummary, Summary, SummaryData};
 
@@ -60,6 +60,7 @@ mod tests {
             .single()
             .expect("Expected Timestamp");
 
+        assert_eq!(summary.common.object, ResourceType::Report);
         assert_eq!(
             summary.common.url.to_string(),
             "https://api.wanikani.com/v2/summary"
@@ -99,7 +100,7 @@ mod tests {
             .expect("Expected Timestamp");
         let summary = Summary {
             common: ResourceCommon {
-                object: "report".into(),
+                object: ResourceType::Report,
                 data_updated_at: Some(timestamp),
                 url: "http://some.url/".parse().expect("URL"),
             },

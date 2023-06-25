@@ -174,7 +174,7 @@ impl From<Preferences> for UpdatePreferences {
 mod tests {
     use crate::{
         user::{LessonPresentationOrder, SubscriptionType, User},
-        ResourceCommon,
+        ResourceCommon, ResourceType,
     };
     use chrono::{DateTime, Utc};
     use url::Url;
@@ -187,7 +187,7 @@ mod tests {
 
         let user: User = serde_json::from_str(json).expect("Deserialize");
 
-        assert_eq!(user.common.object, "user");
+        assert_eq!(user.common.object, ResourceType::User);
         assert_eq!(
             user.common.url.to_string(),
             "https://api.wanikani.com/v2/user"
@@ -266,7 +266,7 @@ mod tests {
             preferences,
         };
         let common = ResourceCommon {
-            object: "user".into(),
+            object: ResourceType::User,
             url: Url::parse("https://api.wanikani.com/v2/user").expect("URL"),
             data_updated_at: Some(Utc::now()),
         };

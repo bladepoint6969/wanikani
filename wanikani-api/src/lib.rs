@@ -490,11 +490,31 @@ pub mod summary;
 #[cfg(feature = "user")]
 pub mod user;
 
+#[cfg(feature = "voice_actor")]
+pub mod voice_actor;
+
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+/// Possible resource types
+pub enum ResourceType {
+    /// A `collection`
+    Collection,
+    #[cfg(feature = "summary")]
+    /// A Summary `report`
+    Report,
+    #[cfg(feature = "user")]
+    /// A `user`
+    User,
+    #[cfg(feature = "voice_actor")]
+    /// A `voice_actor`
+    VoiceActor,
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 /// Struct that contains fields common to all resources
 pub struct ResourceCommon {
     /// An object's type
-    pub object: String,
+    pub object: ResourceType,
     /// The URL of the request. For collections, that will contain all the
     /// filters and options you've passed to the API. Resources have a single
     /// URL and don't need to be filtered, so the URL will be the same in both
@@ -574,14 +594,15 @@ pub enum Error {
     /// ### Example:
     ///
     /// ```rust
-    /// # use wanikani_api::{Error, Utc, WanikaniError};
-    /// # use chrono::Duration;
+    /// # use wanikani_api::{Error, WanikaniError};
     /// # fn do_things() {}
-    /// # let error = Error::RateLimit { error: WanikaniError {code: 429, error: None}, reset_time: Utc::now() + Duration::seconds(10)};
+    /// # let error = Error::RateLimit {
+    /// #     error: WanikaniError {code: 429, error: None},
+    /// #     reset_time: chrono::Utc::now() + chrono::Duration::seconds(10)};
     /// # async {
     /// match error {
     ///     Error::RateLimit{error, reset_time} => {
-    ///         let duration = (reset_time - Utc::now())
+    ///         let duration = (reset_time - chrono::Utc::now())
     ///             .to_std()
     ///             .expect("Reset time should be relatively short");
     ///         // You may want to add some time onto this duration, to account for any
