@@ -73,23 +73,24 @@
 //! kind of thing you're getting. As mentioned before, there are two object types
 //! that return information on many different resources:
 //!
-//! - `collection`: [Collection]
-//! - `report`: [summary::Summary]
+//! - `collection`: [`Collection`]
+//! - `report`: [`Summary`](summary::Summary)
 //!
 //! The following are singular resources:
 //!
-//! - `assignment`: [assignment::Assignment]
-//! - `kana_vocabulary`: [subject::KanaVocabulary]
-//! - `kanji`: [subject::Kanji]
-//! - `level_progression`: [level_progression::LevelProgression]
-//! - `radical`: [subject::Radical]
-//! - `reset`: [reset::Reset]
-//! - `review_statistic`: [review_statistic::ReviewStatistic]
-//! - `review`: [review::Review]
-//! - `spaced_repetition_system`: [srs::SpacedRepetition_system]
-//! - `study_material`: [study_material::StudyMaterial]
-//! - `user`: [user::User]
-//! - `vocabulary`: [subject::Vocabulary]
+//! - `assignment`: [`Assignment`](assignment::Assignment)
+//! - `kana_vocabulary`: [`KanaVocabulary`](subject::KanaVocabulary)
+//! - `kanji`: [`Kanji`](subject::Kanji)
+//! - `level_progression`: [`LevelProgression`](level_progression::LevelProgression)
+//! - `radical`: [`Radical`](subject::Radical)
+//! - `reset`: [`Reset`](reset::Reset)
+//! - `review_statistic`: [`ReviewStatistic`](review_statistic::ReviewStatistic)
+//! - `review`: [`Review`](review::Review)
+//! - `spaced_repetition_system`: [`SpacedRepetitionSystem`](srs::SpacedRepetitionSystem)
+//! - `study_material`: [`StudyMaterial`](study_material::StudyMaterial)
+//! - `user`: [`User`](user::User)
+//! - `vocabulary`: [`Vocabulary`](subject::Vocabulary)
+//! - `voice_actor`: [`VoiceActor`](voice_actor::VoiceActor)
 //!
 //! #### Data Types
 //!
@@ -118,7 +119,7 @@
 //! scheme to move through the pages of results. We use the id of a resource as
 //! the cursor.
 //!
-//! Collections have a [Pages] object nested within a `pages` attribute.
+//! Collections have a [`Pages`] object nested within a `pages` attribute.
 //!
 //! > **Pro tip:** the first page has no previous page, and the last page has no
 //! > next page.
@@ -246,7 +247,7 @@
 //! Here are a few recommendations that might influence what you cache and how
 //! long you keep it around:
 //!
-//! - Cache [subjects](subject) as aggressively as possible. They aren't very
+//! - Cache `subject`s as aggressively as possible. They aren't very
 //!   frequently updated, and you'll probably need to access them frequently.
 //!   They're the object that ties together assignments, review statistics, and
 //!   study materials.
@@ -424,7 +425,7 @@
 //!
 //! ### Spaced Repetition System
 //!
-//! Our [spaced repetition systems](srs) determine how subjects progress from
+//! Our spaced repetition systems determine how subjects progress from
 //! being unavailable to users (locked) through complete memorization (burned).
 //! The [knowledge guide](https://knowledge.wanikani.com/wanikani/srs-stages/)
 //! has some good general information about how we use SRS in WaniKani.
@@ -462,8 +463,8 @@
 //! their current level.
 //!
 //! Resets will show up in a variety of places. Explicit records will show up
-//! nder [resets](reset). They'll get a fresh
-//! [level progression](level_progression) for the target level of the reset,
+//! under resets. They'll get a fresh
+//! `level_progression` for the target level of the reset,
 //! and the level progression for the level they abandoned gets an
 //! `abandoned_at` timestamp. Finally, the `assignments` and `review_statistics`
 //! for the affected levels will get set back to their default state, waiting to
@@ -472,7 +473,7 @@
 
 use std::fmt::{Debug, Display};
 
-pub use chrono::{DateTime, Utc};
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use url::Url;
