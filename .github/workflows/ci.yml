@@ -15,7 +15,7 @@ env:
 
 jobs:
   rate_limiting:
-    needs: [test, windows]
+    needs: [test]
     name: Test rate limiting
     runs-on: ubuntu-latest
     timeout-minutes: 45
