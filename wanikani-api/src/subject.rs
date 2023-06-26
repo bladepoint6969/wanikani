@@ -29,7 +29,7 @@ use url::Url;
 pub use crate::subject_type::*;
 use crate::Timestamp;
 
-/// The `SubjectType` trait exists to help avoid footguns when requesting
+/// The `FetchSubject` trait exists to help avoid footguns when requesting
 /// specific subjects with the API client.
 pub trait FetchSubject: private::Sealed + for<'de> Deserialize<'de> {}
 
