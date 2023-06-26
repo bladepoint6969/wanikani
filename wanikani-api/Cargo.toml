@@ -9,38 +9,41 @@ keywords = ["wanikani", "wk"]
 license = "MIT OR Apache-2.0"
 name = "wanikani-api"
 readme = "README.md"
+homepage = "https://github.com/bladepoint6969/wanikani"
 repository = "https://github.com/bladepoint6969/wanikani"
 rust-version = "1.62.1"
-version = "0.0.0"
+version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-chrono = {version = "0.4.26", default-features = false, features = ["serde", "clock"]}
-log = "0.4.19"
-mime = "0.3.17"
-mime_serde_shim = "0.2.2"
-reqwest = { version = "0.11.18", features = ["json"], optional = true }
-serde = {version = "1.0.164", features = ["derive"]}
-thiserror = "1.0.40"
-url = {version = "2.4.0", features = ["serde"]}
-uuid = {version = "1.3.4", features = ["v4", "serde"]}
+chrono = {version = "0.4", default-features = false, features = ["serde", "clock"]}
+log = "0.4"
+mime = "0.3"
+mime_serde_shim = "0.2"
+reqwest = { version = "0.11", features = ["json"], optional = true, default-features = false }
+serde = {version = "1", features = ["derive"]}
+thiserror = "1"
+url = {version = "2", features = ["serde"]}
+uuid = {version = "1", features = ["v4", "serde"]}
 
 [features]
 client = ["reqwest"]
-default = ["client", "model"]
+default = ["client", "default-tls", "model"]
 level_progression = []
 model = ["level_progression", "subject", "summary", "user", "voice_actor"]
 subject = []
 summary = []
 user = []
 voice_actor = []
+default-tls = ["reqwest/default-tls"]
+rustls-tls = ["reqwest/rustls-tls"]
 
 [dev-dependencies]
-dotenvy = "0.15.7"
-env_logger = "0.10.0"
-serde_json = "1.0.99"
-tokio = { version = "1.28.2", features = ["macros", "time", "rt"] }
+dotenvy = "0.15"
+env_logger = "0.10"
+serde_json = "1"
+tokio = { version = "1", features = ["macros", "time", "rt"] }
 
 [[example]]
 name = "fetch_subjects"
