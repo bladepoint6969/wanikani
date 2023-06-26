@@ -475,7 +475,7 @@ use std::fmt::{Debug, Display};
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use thiserror::Error;
+use thiserror::Error as E;
 use url::Url;
 
 /// Convenience type for working with timestamps.
@@ -687,7 +687,7 @@ impl Display for WanikaniError {
 
 impl std::error::Error for WanikaniError {}
 
-#[derive(Debug, Error)]
+#[derive(Debug, E)]
 /// Possible error conditions
 pub enum Error {
     #[error("WaniKani error: {0}")]
@@ -741,3 +741,13 @@ pub const API_VERSION: &str = "20170710";
 
 /// The base URL of the WaniKani V2 API
 pub const URL_BASE: &str = "https://api.wanikani.com/v2";
+
+/// A convenience module appropriate for glob imports (use wanikani_api::prelude::*;).
+pub mod prelude {
+    #[cfg(feature = "client")]
+    pub use crate::client::WKClient;
+    #[cfg(feature = "client")]
+    pub use reqwest;
+
+    pub use crate::{Collection, Error, Resource, ResourceType};
+}
