@@ -11,6 +11,38 @@ use crate::{Error, Timestamp, WanikaniError, API_VERSION, URL_BASE};
 
 const REVISION_HEADER: &str = "Wanikani-Revision";
 
+pub(crate) trait Filter {
+    fn apply_filters(&self, url: &mut Url);
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+/// Filter parameters for voice actor collections
+pub struct IdFilter {
+    /// Only voice_actors where `data.id` matches one of the array values are returned.
+    pub ids: Option<Vec<u64>>,
+    /// Only voice_actors updated after this time are returned.
+    pub updated_after: Option<Timestamp>,
+}
+
+impl crate::client::Filter for IdFilter {
+    fn apply_filters(&self, url: &mut url::Url) {
+        let mut query = url.query_pairs_mut();
+        if let Some(ref ids) = self.ids {
+            query.append_pair(
+                "ids",
+                ids.iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+                    .join(",")
+                    .as_str(),
+            );
+        }
+        if let Some(updated_after) = self.updated_after {
+            query.append_pair("updated_after", updated_after.to_rfc3339().as_str());
+        }
+    }
+}
+
 /// The WaniKani client struct performs requests to the API.
 pub struct WKClient {
     base_url: Url,
@@ -204,16 +236,21 @@ mod user {
 mod voice_actor {
     use crate::{voice_actor::VoiceActor, Collection, Error, Resource};
 
-    use super::WKClient;
+    use super::{Filter, WKClient, IdFilter};
 
     const VO_PATH: &str = "voice_actors";
 
     impl WKClient {
         /// Returns a collection of all voice actors, ordered by ascending
         /// `created_at`, 500 at a time.
-        pub async fn get_voice_actors(&self) -> Result<Collection<VoiceActor>, Error> {
+        pub async fn get_voice_actors(
+            &self,
+            filters: &IdFilter,
+        ) -> Result<Collection<VoiceActor>, Error> {
             let mut url = self.base_url.clone();
             url.path_segments_mut().expect("Valid URL").push(VO_PATH);
+
+            filters.apply_filters(&mut url);
 
             let req = self.client.get(url);
 
@@ -242,16 +279,18 @@ mod voice_actor {
 mod level_progression {
     use crate::{level_progression::LevelProgression, Collection, Error, Resource};
 
-    use super::WKClient;
+    use super::{WKClient, IdFilter, Filter};
 
     const PROG_PATH: &str = "level_progressions";
 
     impl WKClient {
         /// Returns a collection of all level progressions, ordered by ascending
         /// `created_at`, 500 at a time.
-        pub async fn get_level_progressions(&self) -> Result<Collection<LevelProgression>, Error> {
+        pub async fn get_level_progressions(&self, filters: &IdFilter) -> Result<Collection<LevelProgression>, Error> {
             let mut url = self.base_url.clone();
             url.path_segments_mut().expect("Valid URL").push(PROG_PATH);
+
+            filters.apply_filters(&mut url);
 
             let req = self.client.get(url);
 
@@ -278,10 +317,10 @@ mod level_progression {
 
 #[cfg(test)]
 mod tests {
-    use std::env;
     use reqwest::Client;
+    use std::env;
 
-    use super::WKClient;
+    use super::{IdFilter, WKClient};
 
     static INIT: std::sync::OnceLock<()> = std::sync::OnceLock::new();
 
@@ -364,11 +403,41 @@ mod tests {
     #[cfg(feature = "voice_actor")]
     #[tokio::test]
     async fn test_get_voice_actors() {
+        use chrono::Utc;
+
         init_tests();
 
         let client = create_client();
 
-        assert!(client.get_voice_actors().await.is_ok());
+        let mut voice_actors = client
+            .get_voice_actors(&IdFilter::default())
+            .await
+            .expect("VOs returned");
+
+        assert_eq!(voice_actors.total_count, 2);
+        assert_eq!(voice_actors.data.len(), 2);
+
+        voice_actors = client
+            .get_voice_actors(&IdFilter {
+                ids: Some(vec![1]),
+                ..IdFilter::default()
+            })
+            .await
+            .expect("VO 1");
+
+        assert_eq!(voice_actors.total_count, 1);
+        assert_eq!(voice_actors.data.len(), 1);
+
+        voice_actors = client
+            .get_voice_actors(&IdFilter {
+                updated_after: Some(Utc::now()),
+                ..IdFilter::default()
+            })
+            .await
+            .expect("No VO");
+
+        assert_eq!(voice_actors.total_count, 0);
+        assert!(voice_actors.data.is_empty());
     }
 
     #[cfg(feature = "voice_actor")]
@@ -388,7 +457,7 @@ mod tests {
 
         let client = create_client();
 
-        assert!(client.get_level_progressions().await.is_ok());
+        assert!(client.get_level_progressions(&IdFilter::default()).await.is_ok());
     }
 
     #[cfg(feature = "level_progression")]
@@ -409,7 +478,7 @@ mod tests {
     #[tokio::test]
     #[ignore]
     async fn test_rate_limiting() {
-        use chrono::{DateTime, Local, Utc, Duration};
+        use chrono::{DateTime, Duration, Local, Utc};
         use tokio::time::Instant;
 
         use crate::Error;
