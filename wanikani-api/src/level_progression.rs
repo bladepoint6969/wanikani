@@ -46,7 +46,7 @@ pub struct LevelProgression {
 mod tests {
     use chrono::{DateTime, Utc};
 
-    use crate::{Resource, ResourceType, ResourceCommon};
+    use crate::{Resource, ResourceCommon, ResourceType};
 
     use super::LevelProgression;
 
@@ -105,7 +105,9 @@ mod tests {
         let common = ResourceCommon {
             data_updated_at: Some(Utc::now()),
             object: ResourceType::LevelProgression,
-            url: "https://api.wanikani.com/v2/level_progressions/69420".parse().expect("URL"),
+            url: "https://api.wanikani.com/v2/level_progressions/69420"
+                .parse()
+                .expect("URL"),
         };
         let level_progression = Resource {
             id: 69420,

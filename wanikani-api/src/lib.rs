@@ -487,6 +487,13 @@ pub mod client;
 #[cfg(feature = "level_progression")]
 pub mod level_progression;
 
+#[cfg(feature = "subject")]
+pub mod subject;
+#[cfg(not(feature = "subject"))]
+pub mod subject {
+    pub use crate::subject_type::SubjectType;
+}
+
 #[cfg(feature = "summary")]
 pub mod summary;
 
@@ -495,6 +502,80 @@ pub mod user;
 
 #[cfg(feature = "voice_actor")]
 pub mod voice_actor;
+
+mod subject_type {
+    use std::{error::Error, fmt::Display};
+
+    use serde::{Deserialize, Serialize};
+
+    use crate::ResourceType;
+
+    #[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
+    #[serde(rename_all = "snake_case")]
+    /// Subjects are a subset of resources, learned through lessons and reviews.
+    pub enum SubjectType {
+        /// A radical.
+        Radical,
+        /// A kanji.
+        Kanji,
+        /// A word with kanji in it.
+        Vocabulary,
+        /// A word with only kana.
+        KanaVocabulary,
+    }
+
+    impl Display for SubjectType {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                Self::KanaVocabulary => write!(f, "kana_vocabulary"),
+                Self::Kanji => write!(f, "kanji"),
+                Self::Radical => write!(f, "radical"),
+                Self::Vocabulary => write!(f, "vocabulary"),
+            }
+        }
+    }
+
+    #[cfg(feature = "subject")]
+    #[derive(Debug, Clone, Copy)]
+    /// Not all resources are subjects, so this will be returned as an error if
+    /// an attempted conversion fails.
+    pub struct ConversionError(ResourceType);
+
+    #[cfg(feature = "subject")]
+    impl Display for ConversionError {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "{:?} is not a subject type.", self.0)
+        }
+    }
+
+    #[cfg(feature = "subject")]
+    impl Error for ConversionError {}
+
+    #[cfg(feature = "subject")]
+    impl TryFrom<ResourceType> for SubjectType {
+        type Error = ConversionError;
+        fn try_from(value: ResourceType) -> Result<Self, Self::Error> {
+            match value {
+                ResourceType::KanaVocabulary => Ok(Self::KanaVocabulary),
+                ResourceType::Kanji => Ok(Self::Kanji),
+                ResourceType::Radical => Ok(Self::Radical),
+                ResourceType::Vocabulary => Ok(Self::Vocabulary),
+                r => Err(ConversionError(r)),
+            }
+        }
+    }
+
+    impl From<SubjectType> for ResourceType {
+        fn from(value: SubjectType) -> Self {
+            match value {
+                SubjectType::KanaVocabulary => Self::KanaVocabulary,
+                SubjectType::Kanji => Self::Kanji,
+                SubjectType::Radical => Self::Radical,
+                SubjectType::Vocabulary => Self::Vocabulary,
+            }
+        }
+    }
+}
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
@@ -505,6 +586,18 @@ pub enum ResourceType {
     #[cfg(feature = "level_progression")]
     /// A `level_progression
     LevelProgression,
+    #[cfg(feature = "subject")]
+    /// A radical.
+    Radical,
+    #[cfg(feature = "subject")]
+    /// A kanji.
+    Kanji,
+    #[cfg(feature = "subject")]
+    /// A word with kanji in it.
+    Vocabulary,
+    #[cfg(feature = "subject")]
+    /// A word with only kana.
+    KanaVocabulary,
     #[cfg(feature = "summary")]
     /// A Summary `report`
     Report,
