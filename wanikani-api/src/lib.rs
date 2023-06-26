@@ -565,6 +565,7 @@ mod subject_type {
         }
     }
 
+    #[cfg(feature = "subject")]
     impl From<SubjectType> for ResourceType {
         fn from(value: SubjectType) -> Self {
             match value {

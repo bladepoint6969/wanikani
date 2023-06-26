@@ -437,12 +437,19 @@ mod subject {
 
 #[cfg(test)]
 mod tests {
+    use chrono::{Utc, Duration};
     use reqwest::Client;
     use std::env;
+
+    use crate::Timestamp;
 
     use super::{IdFilter, WKClient};
 
     static INIT: std::sync::OnceLock<()> = std::sync::OnceLock::new();
+
+    fn get_timestamp() -> Timestamp {
+        Utc::now() - Duration::seconds(10)
+    }
 
     fn init_tests() {
         INIT.get_or_init(|| {
@@ -523,8 +530,6 @@ mod tests {
     #[cfg(feature = "voice_actor")]
     #[tokio::test]
     async fn test_get_voice_actors() {
-        use chrono::Utc;
-
         init_tests();
 
         let client = create_client();
@@ -550,7 +555,7 @@ mod tests {
 
         voice_actors = client
             .get_voice_actors(&IdFilter {
-                updated_after: Some(Utc::now()),
+                updated_after: Some(get_timestamp()),
                 ..IdFilter::default()
             })
             .await

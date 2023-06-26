@@ -118,7 +118,36 @@ pub enum SubscriptionType {
 /// User information update request.
 pub struct UpdateUser {
     /// Preference updates.
+    #[serde(with = "update_prefs", rename = "user")]
     pub preferences: UpdatePreferences,
+}
+
+mod update_prefs {
+    use serde::{ser::SerializeStruct, Deserializer, Serializer, Deserialize, Serialize};
+
+    use super::UpdatePreferences;
+
+    #[derive(Deserialize, Serialize)]
+    struct Wrapper {
+        preferences: UpdatePreferences,
+    }
+
+    pub fn serialize<S>(value: &UpdatePreferences, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("user", 1)?;
+        state.serialize_field("preferences", value)?;
+        state.end()
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<UpdatePreferences, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let wrapper = Wrapper::deserialize(deserializer)?;
+        Ok(wrapper.preferences)
+    }
 }
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq, Default)]
@@ -179,7 +208,7 @@ mod tests {
     use chrono::{DateTime, Utc};
     use url::Url;
 
-    use super::{Preferences, Subscription, UserData};
+    use super::{Preferences, Subscription, UpdateUser, UserData, UpdatePreferences};
 
     #[test]
     fn test_user_deserialize() {
@@ -278,5 +307,33 @@ mod tests {
         let new_user: User = serde_json::from_str(&json).expect("Deserialize correctly");
 
         assert_eq!(new_user, user);
+    }
+
+    #[test]
+    fn test_update_user_deserialize() {
+        let json = include_str!("../test_files/update_user.json");
+
+        let update: UpdateUser = serde_json::from_str(json).expect("Deserialize");
+
+        let prefs = update.preferences;
+        assert!(prefs.lessons_autoplay_audio.expect("bool"));
+        assert_eq!(prefs.lessons_batch_size.expect("u32"), 3);
+        assert_eq!(prefs.lessons_presentation_order.expect("enum"), LessonPresentationOrder::Shuffled);
+        assert!(prefs.reviews_autoplay_audio.expect("bool"));
+        assert!(!prefs.reviews_display_srs_indicator.expect("bool"));
+    }
+
+    #[test]
+    fn test_update_user_serialize() {
+        let update = UpdateUser {
+            preferences: UpdatePreferences {
+                extra_study_autoplay_audio: Some(true),
+                ..Default::default()
+            }
+        };
+
+        let json = serde_json::to_string(&update).expect("Serialize");
+
+        assert_eq!(json, r#"{"user":{"preferences":{"extra_study_autoplay_audio":true}}}"#);
     }
 }

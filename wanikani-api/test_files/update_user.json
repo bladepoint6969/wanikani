@@ -1,0 +1,11 @@
+{
+    "user": {
+        "preferences": {
+            "lessons_autoplay_audio": true,
+            "lessons_batch_size": 3,
+            "lessons_presentation_order": "shuffled",
+            "reviews_autoplay_audio": true,
+            "reviews_display_srs_indicator": false
+        }
+    }
+}
