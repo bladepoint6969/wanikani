@@ -5,6 +5,11 @@ on:
   pull_request:
   schedule: [cron: "0 0 * * *"]
   workflow_dispatch:
+    inputs:
+      include_rate_limiting:
+        type: boolean
+        description: Run rate-limit test
+
 
 permissions:
   contents: read
@@ -19,6 +24,7 @@ jobs:
     needs: [test]
     name: Test rate limiting
     runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.event.inputs.include_rate_limiting)
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v3
