@@ -499,12 +499,14 @@ mod tests {
         let common = ResourceCommon {
             data_updated_at: Some(Utc::now()),
             object: ResourceType::Kanji,
-            url: "https://api.wanikani.com/v2/subjects/440".parse().expect("URL"),
+            url: "https://api.wanikani.com/v2/subjects/440"
+                .parse()
+                .expect("URL"),
         };
         let kanji = Resource {
             common,
             data,
-            id: 5
+            id: 5,
         };
 
         let json = serde_json::to_string(&kanji).expect("Serialize");
