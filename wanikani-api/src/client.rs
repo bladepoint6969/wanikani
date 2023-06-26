@@ -608,7 +608,7 @@ mod tests {
 
         let client = create_client();
         let filters = SubjectFilter {
-            types: Some(vec![SubjectType::Radical]), // TODO: Remove when all subject types are implemented
+            types: Some(vec![SubjectType::Radical, SubjectType::Kanji]), // TODO: Remove when all subject types are implemented
             levels: Some(vec![1]),
             ..SubjectFilter::default()
         };
@@ -618,12 +618,16 @@ mod tests {
     #[cfg(feature = "subject")]
     #[tokio::test]
     async fn test_get_specific_subject() {
-        use crate::{Resource, subject::{Subject, Radical}};
+        use crate::{
+            subject::{Kanji, Radical, Subject},
+            Resource,
+        };
 
         init_tests();
 
         let client = create_client();
-        let subject: Resource<Subject> = client.get_specific_subject(1).await.expect("Get subject");
+        let mut subject: Resource<Subject> =
+            client.get_specific_subject(1).await.expect("Get subject");
         let radical: Resource<Radical> = client.get_specific_subject(1).await.expect("Get radical");
 
         let Subject::Radical(subject_inner) = subject.data else {
@@ -633,6 +637,17 @@ mod tests {
         assert_eq!(subject.id, radical.id);
         assert_eq!(subject.common, radical.common);
         assert_eq!(subject_inner, radical.data);
+
+        subject = client.get_specific_subject(440).await.expect("Get subject");
+        let kanji: Resource<Kanji> = client.get_specific_subject(440).await.expect("Get kanji");
+
+        let Subject::Kanji(subject_inner) = subject.data else {
+            panic!("Incorrect type (Should be kanji)");
+        };
+
+        assert_eq!(subject.id, kanji.id);
+        assert_eq!(subject.common, kanji.common);
+        assert_eq!(subject_inner, kanji.data);
     }
 
     #[cfg(feature = "summary")]

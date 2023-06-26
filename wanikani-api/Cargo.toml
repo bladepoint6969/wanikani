@@ -40,4 +40,8 @@ voice_actor = []
 dotenvy = "0.15.7"
 env_logger = "0.10.0"
 serde_json = "1.0.99"
-tokio = {version = "1.28.2", features = ["macros", "time"]}
+tokio = { version = "1.28.2", features = ["macros", "time", "rt"] }
+
+[[example]]
+name = "fetch_subjects"
+required-features = ["client", "subject"]

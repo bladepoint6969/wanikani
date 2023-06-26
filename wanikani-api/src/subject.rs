@@ -35,14 +35,16 @@ pub trait FetchSubject: private::Sealed + for<'de> Deserialize<'de> {}
 
 impl FetchSubject for Subject {}
 impl FetchSubject for Radical {}
+impl FetchSubject for Kanji {}
 
 mod private {
-    use super::{Radical, Subject};
+    use super::{Kanji, Radical, Subject};
 
     pub trait Sealed {}
 
     impl Sealed for Subject {}
     impl Sealed for Radical {}
+    impl Sealed for Kanji {}
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
@@ -52,6 +54,8 @@ mod private {
 pub enum Subject {
     /// A Radical
     Radical(Radical),
+    /// A Kanji
+    Kanji(Kanji),
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
@@ -171,12 +175,71 @@ pub enum ImageMetadata {
     },
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+/// A kanji subject.
+pub struct Kanji {
+    /// Attributes common to all subjects.
+    #[serde(flatten)]
+    pub common: SubjectCommon,
+    /// An array of numeric identifiers for the vocabulary that have the kanji
+    /// as a component.
+    pub amalgamation_subject_ids: Vec<u64>,
+    /// The UTF-8 characters for the subject, including kanji and hiragana.
+    pub characters: String,
+    /// An array of numeric identifiers for the radicals that make up this
+    /// kanji. Note that these are the subjects that must have passed
+    /// assignments in order to unlock this subject's assignment.
+    pub component_subject_ids: Vec<u64>,
+    /// Meaning hint for the kanji.
+    pub meaning_hint: Option<String>,
+    /// Reading hint for the kanji.
+    pub reading_hint: Option<String>,
+    /// The kanji's reading mnemonic.
+    pub reading_mnemonic: String,
+    /// Selected readings for the kanji.
+    pub readings: Vec<KanjiReading>,
+    /// An array of numeric identifiers for kanji which are visually similar to the kanji in question.
+    pub visually_similar_subject_ids: Vec<u64>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+/// A Kanji reading.
+pub struct KanjiReading {
+    /// A singular subject reading.
+    pub reading: String,
+    /// Indicates priority in the WaniKani system.
+    pub primary: bool,
+    /// Indicates if the reading is used to evaluate user input for correctness.
+    pub accepted_answer: bool,
+    #[serde(rename = "type")]
+    /// The kanji reading's classfication.
+    pub reading_type: KanjiReadingType,
+}
+
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+/// The classfication of a kanji reading
+pub enum KanjiReadingType {
+    /// Kun'yomi readings are Japanese readings of a kanji.
+    Kunyomi,
+    /// Nanori readings are nonstandard readings almost exclusively used in
+    /// names.
+    Nanori,
+    /// On'yomi readings are derived from the Chinese readings of a kanji.
+    Onyomi,
+}
+
 #[cfg(test)]
 mod tests {
+    use std::vec;
+
     use chrono::{DateTime, Utc};
 
     use crate::{
-        subject::{AuxilliaryMeaning, CharacterImage, ImageMetadata, Meaning, MeaningType},
+        subject::{
+            AuxilliaryMeaning, CharacterImage, ImageMetadata, Kanji, KanjiReading,
+            KanjiReadingType, Meaning, MeaningType,
+        },
         Resource, ResourceCommon, ResourceType,
     };
 
@@ -303,5 +366,155 @@ mod tests {
             panic!("Incorrect subject type");
         };
         assert_eq!(subject_inner, radical.data);
+    }
+
+    #[test]
+    fn test_kanji_deserialize() {
+        let json = include_str!("../test_files/kanji.json");
+
+        let subject: Resource<Subject> = serde_json::from_str(json).expect("Deserialize subject");
+        let Subject::Kanji(subject_inner) = subject.data else {
+            panic!("Incorrect subject type");
+        };
+
+        let kanji: Resource<Kanji> = serde_json::from_str(json).expect("Deserialize kanji");
+
+        // Prove that Subject and Kanji Deserializations are identical
+        assert_eq!(kanji.id, subject.id);
+        assert_eq!(kanji.common, subject.common);
+        assert_eq!(kanji.data, subject_inner);
+
+        assert_eq!(kanji.id, 440);
+
+        let common = kanji.common;
+        assert_eq!(common.object, ResourceType::Kanji);
+        assert_eq!(
+            common.url,
+            "https://api.wanikani.com/v2/subjects/440"
+                .parse()
+                .expect("URL")
+        );
+        assert_eq!(
+            common.data_updated_at.expect("Timestamp"),
+            DateTime::parse_from_rfc3339("2018-03-29T23:14:30.805034Z").expect("Timestamp")
+        );
+
+        let data = kanji.data;
+        assert_eq!(data.amalgamation_subject_ids, [56, 88, 91]);
+        assert_eq!(
+            data.common.auxiliary_meanings,
+            [
+                AuxilliaryMeaning {
+                    meaning: "one".into(),
+                    meaning_type: MeaningType::Blacklist,
+                },
+                AuxilliaryMeaning {
+                    meaning: "flat".into(),
+                    meaning_type: MeaningType::Whitelist,
+                }
+            ]
+        );
+        assert_eq!(data.characters, "一");
+        assert_eq!(data.component_subject_ids, [1]);
+        assert_eq!(
+            data.common.created_at,
+            DateTime::parse_from_rfc3339("2012-02-27T19:55:19.000000Z").expect("Timestamp")
+        );
+        assert_eq!(
+            data.common.document_url,
+            "https://www.wanikani.com/kanji/%E4%B8%80"
+                .parse()
+                .expect("URL")
+        );
+        assert!(data.common.hidden_at.is_none());
+        assert_eq!(data.common.lesson_position, 2);
+        assert_eq!(data.common.level, 1);
+        assert_eq!(
+            data.common.meanings,
+            [Meaning {
+                meaning: "One".into(),
+                primary: true,
+                accepted_answer: true,
+            }]
+        );
+        assert_eq!(data.meaning_hint.expect("Hint"), "To remember the meaning of <kanji>One</kanji>, imagine yourself there at the scene of the crime. You grab <kanji>One</kanji> in your arms, trying to prop it up, trying to hear its last words. Instead, it just splatters some blood on your face. \"Who did this to you?\" you ask. The number One points weakly, and you see number Two running off into an alleyway. He's always been jealous of number One and knows he can be number one now that he's taken the real number one out.");
+        assert_eq!(data.common.meaning_mnemonic, "Lying on the <radical>ground</radical> is something that looks just like the ground, the number <kanji>One</kanji>. Why is this One lying down? It's been shot by the number two. It's lying there, bleeding out and dying. The number One doesn't have long to live.");
+        assert_eq!(
+            data.readings,
+            [
+                KanjiReading {
+                    reading_type: KanjiReadingType::Onyomi,
+                    primary: true,
+                    accepted_answer: true,
+                    reading: "いち".into(),
+                },
+                KanjiReading {
+                    reading_type: KanjiReadingType::Kunyomi,
+                    primary: false,
+                    accepted_answer: false,
+                    reading: "ひと".into(),
+                },
+                KanjiReading {
+                    reading_type: KanjiReadingType::Nanori,
+                    primary: false,
+                    accepted_answer: false,
+                    reading: "かず".into(),
+                }
+            ]
+        );
+        assert_eq!(data.reading_mnemonic, "As you're sitting there next to <kanji>One</kanji>, holding him up, you start feeling a weird sensation all over your skin. From the wound comes a fine powder (obviously coming from the special bullet used to kill One) that causes the person it touches to get extremely <reading>itchy</reading> (いち)");
+        assert_eq!(data.reading_hint.expect("Hint"), "Make sure you feel the ridiculously <reading>itchy</reading> sensation covering your body. It climbs from your hands, where you're holding the number <kanji>One</kanji> up, and then goes through your arms, crawls up your neck, goes down your body, and then covers everything. It becomes uncontrollable, and you're scratching everywhere, writhing on the ground. It's so itchy that it's the most painful thing you've ever experienced (you should imagine this vividly, so you remember the reading of this kanji).");
+        assert_eq!(data.common.slug, "一");
+        assert!(data.visually_similar_subject_ids.is_empty());
+        assert_eq!(data.common.spaced_repetition_system_id, 1);
+    }
+
+    #[test]
+    fn test_kanji_serialize() {
+        let common = SubjectCommon {
+            auxiliary_meanings: vec![],
+            created_at: Utc::now(),
+            document_url: "https://www.wanikani.com/kanji/test_kan"
+                .parse()
+                .expect("URL"),
+            hidden_at: None,
+            lesson_position: 4,
+            level: 2,
+            meaning_mnemonic: "This is a test kanji".into(),
+            meanings: vec![],
+            slug: "kanji".into(),
+            spaced_repetition_system_id: 5,
+        };
+        let data = Kanji {
+            amalgamation_subject_ids: vec![],
+            characters: "kanji".into(),
+            common,
+            component_subject_ids: vec![1, 2, 3],
+            meaning_hint: None,
+            reading_hint: None,
+            reading_mnemonic: "this is the reading mnemonic".into(),
+            readings: vec![],
+            visually_similar_subject_ids: vec![1, 2, 3],
+        };
+        let common = ResourceCommon {
+            data_updated_at: Some(Utc::now()),
+            object: ResourceType::Kanji,
+            url: "https://api.wanikani.com/v2/subjects/440".parse().expect("URL"),
+        };
+        let kanji = Resource {
+            common,
+            data,
+            id: 5
+        };
+
+        let json = serde_json::to_string(&kanji).expect("Serialize");
+        let subject: Resource<Subject> = serde_json::from_str(&json).expect("Deserialize");
+
+        assert_eq!(subject.common, kanji.common);
+        assert_eq!(subject.id, kanji.id);
+        let Subject::Kanji(subject_inner) = subject.data else {
+            panic!("Incorrect subject type");
+        };
+        assert_eq!(subject_inner, kanji.data);
     }
 }
