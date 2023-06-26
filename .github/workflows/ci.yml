@@ -16,7 +16,7 @@ env:
 
 jobs:
   rate_limiting:
-    needs: [test, windows]
+    needs: [test]
     name: Test rate limiting
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -27,17 +27,12 @@ jobs:
           RUST_LOG: info
 
   test:
-    name: Test suite
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    steps:
-      - uses: actions/checkout@v3
-      - run: cargo test
-      - run: cargo test --no-default-features --features model
-
-  windows:
-    name: Test suite (Windows)
-    runs-on: windows-latest
+    name: Test suite [${{matrix.runner}}]
+    runs-on: ${{matrix.runner}}
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, windows-latest]
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v3
