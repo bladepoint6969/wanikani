@@ -1,0 +1,56 @@
+{
+    "id": 9210,
+    "object": "kana_vocabulary",
+    "url": "https://api.wanikani.com/v2/subjects/9210",
+    "data_updated_at": "2023-05-03T13:01:51.333012Z",
+    "data": {
+        "created_at": "2023-04-24T23:52:43.457614Z",
+        "level": 8,
+        "slug": "おやつ",
+        "hidden_at": null,
+        "document_url": "https://www.wanikani.com/vocabulary/おやつ",
+        "characters": "おやつ",
+        "meanings": [
+            {
+                "meaning": "Snack",
+                "primary": true,
+                "accepted_answer": true
+            }
+        ],
+        "auxiliary_meanings": [],
+        "parts_of_speech": [
+            "noun"
+        ],
+        "meaning_mnemonic": "<reading>Oh yah! Two</reading> (<ja>おやつ</ja>) <vocabulary>snack</vocabulary>s, just for you. Imagine your two snacks. What are they? I bet they're delicious. Oh yah!\r\n\r\nYou can use <ja>おやつ</ja> to refer to a small amount of food eaten between meals, including candies and light meals like onigiri.",
+        "context_sentences": [
+            {
+                "en": "Today I had a muffin for a snack.",
+                "ja": "今日はおやつにマフィンを食べた。"
+            },
+            {
+                "en": "Shall we take a snack break?",
+                "ja": "そろそろおやつにする？"
+            },
+            {
+                "en": "Kaori's snacks are always homemade!",
+                "ja": "カオリちゃんのおやつは、いつも手作りだよ！"
+            }
+        ],
+        "pronunciation_audios": [
+            {
+                "url": "https://files.wanikani.com/w4yp5o02betioucki05lp6x78quy",
+                "metadata": {
+                    "gender": "male",
+                    "source_id": 44757,
+                    "pronunciation": "おやつ",
+                    "voice_actor_id": 2,
+                    "voice_actor_name": "Kenichi",
+                    "voice_description": "Tokyo accent"
+                },
+                "content_type": "audio/webm"
+            }
+        ],
+        "lesson_position": 0,
+        "spaced_repetition_system_id": 1
+    }
+}

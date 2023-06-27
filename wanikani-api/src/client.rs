@@ -605,20 +605,13 @@ mod tests {
     #[cfg(feature = "subject")]
     #[tokio::test]
     async fn test_get_subjects() {
-        use crate::cross_feature::SubjectType;
-
         use super::SubjectFilter;
 
         init_tests();
 
         let client = create_client();
         let filters = SubjectFilter {
-            types: Some(vec![
-                SubjectType::Radical,
-                SubjectType::Kanji,
-                SubjectType::Vocabulary,
-            ]), // TODO: Remove when all subject types are implemented
-            levels: Some(vec![1]),
+            levels: Some(vec![2]),
             ..SubjectFilter::default()
         };
         assert!(client.get_subjects(&filters).await.is_ok());
@@ -628,7 +621,7 @@ mod tests {
     #[tokio::test]
     async fn test_get_specific_subject() {
         use crate::{
-            subject::{Kanji, Radical, Subject, Vocabulary},
+            subject::{Kanji, Radical, Subject, Vocabulary, KanaVocabulary},
             Resource,
         };
 
@@ -662,6 +655,17 @@ mod tests {
         let vocab: Resource<Vocabulary> = client.get_specific_subject(2467).await.expect("Get vocab");
 
         let Subject::Vocabulary(subject_inner) = subject.data else {
+            panic!("Incorrect type (Should be kanji)");
+        };
+
+        assert_eq!(subject.id, vocab.id);
+        assert_eq!(subject.common, vocab.common);
+        assert_eq!(subject_inner, vocab.data);
+
+        subject = client.get_specific_subject(9177).await.expect("Get subject");
+        let vocab: Resource<KanaVocabulary> = client.get_specific_subject(9177).await.expect("Get kana vocab");
+
+        let Subject::KanaVocabulary(subject_inner) = subject.data else {
             panic!("Incorrect type (Should be kanji)");
         };
 

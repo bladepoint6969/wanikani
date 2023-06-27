@@ -37,9 +37,10 @@ impl FetchSubject for Subject {}
 impl FetchSubject for Radical {}
 impl FetchSubject for Kanji {}
 impl FetchSubject for Vocabulary {}
+impl FetchSubject for KanaVocabulary {}
 
 mod private {
-    use super::{Kanji, Radical, Subject, Vocabulary};
+    use super::{KanaVocabulary, Kanji, Radical, Subject, Vocabulary};
 
     pub trait Sealed {}
 
@@ -47,6 +48,7 @@ mod private {
     impl Sealed for Radical {}
     impl Sealed for Kanji {}
     impl Sealed for Vocabulary {}
+    impl Sealed for KanaVocabulary {}
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
@@ -60,6 +62,8 @@ pub enum Subject {
     Kanji(Kanji),
     /// A Vocabulary word
     Vocabulary(Vocabulary),
+    /// A kana-only vocabulary word
+    KanaVocabulary(KanaVocabulary),
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
@@ -307,6 +311,22 @@ pub struct AudioMetadata {
     pub voice_description: String,
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+/// A kana-only vocabulary word.
+pub struct KanaVocabulary {
+    #[serde(flatten)]
+    /// Attributes common to all subjects.
+    pub common: SubjectCommon,
+    /// The UTF-8 characters for the subject, including kanji and hiragana.
+    pub characters: String,
+    /// A collection of context sentences.
+    pub context_sentences: Vec<ContextSentence>,
+    /// Parts of speech.
+    pub parts_of_speech: Vec<String>,
+    /// A collection of pronunciation audio.
+    pub pronunciation_audios: Vec<PronunciationAudio>,
+}
+
 #[cfg(test)]
 mod tests {
     use std::vec;
@@ -317,8 +337,8 @@ mod tests {
         cross_feature::Gender,
         subject::{
             AudioMetadata, AuxilliaryMeaning, CharacterImage, ContextSentence, ImageMetadata,
-            Kanji, KanjiReading, KanjiReadingType, Meaning, MeaningType, PronunciationAudio,
-            Vocabulary, VocabularyReading,
+            KanaVocabulary, Kanji, KanjiReading, KanjiReadingType, Meaning, MeaningType,
+            PronunciationAudio, Vocabulary, VocabularyReading,
         },
         Resource, ResourceCommon, ResourceType,
     };
@@ -609,7 +629,7 @@ mod tests {
             panic!("Incorrect subject type");
         };
 
-        let vocab: Resource<Vocabulary> = serde_json::from_str(json).expect("Deserialize kanji");
+        let vocab: Resource<Vocabulary> = serde_json::from_str(json).expect("Deserialize vocab");
 
         // Prove that Subject and Vocab Deserializations are identical
         assert_eq!(vocab.id, subject.id);
@@ -799,6 +819,174 @@ mod tests {
         let subject: Resource<Subject> = serde_json::from_str(&json).expect("Deserialize");
 
         let Subject::Vocabulary(subject_inner) = subject.data else {
+            panic!("Incorrect subject type");
+        };
+
+        // Prove that Subject and Vocab Deserializations are identical
+        assert_eq!(vocab.id, subject.id);
+        assert_eq!(vocab.common, subject.common);
+        assert_eq!(vocab.data, subject_inner);
+    }
+
+    #[test]
+    fn test_kana_deserialize() {
+        let json = include_str!("../test_files/kana_vocabulary.json");
+
+        let subject: Resource<Subject> = serde_json::from_str(json).expect("Deserialize subject");
+        let Subject::KanaVocabulary(subject_inner) = subject.data else {
+            panic!("Incorrect subject type");
+        };
+
+        let vocab: Resource<KanaVocabulary> =
+            serde_json::from_str(json).expect("Deserialize vocab");
+
+        // Prove that Subject and Vocab Deserializations are identical
+        assert_eq!(vocab.id, subject.id);
+        assert_eq!(vocab.common, subject.common);
+        assert_eq!(vocab.data, subject_inner);
+
+        assert_eq!(vocab.id, 9210);
+
+        let common = vocab.common;
+        assert_eq!(common.object, ResourceType::KanaVocabulary);
+        assert_eq!(
+            common.url,
+            "https://api.wanikani.com/v2/subjects/9210"
+                .parse()
+                .expect("URL")
+        );
+        assert_eq!(
+            common.data_updated_at.expect("Timestamp"),
+            DateTime::parse_from_rfc3339("2023-05-03T13:01:51.333012Z").expect("Timestamp")
+        );
+
+        let data = vocab.data;
+        assert_eq!(
+            data.common.created_at,
+            DateTime::parse_from_rfc3339("2023-04-24T23:52:43.457614Z").expect("Timestamp")
+        );
+        assert_eq!(data.common.level, 8);
+        assert_eq!(data.common.slug, "おやつ");
+        assert!(data.common.hidden_at.is_none());
+        assert_eq!(
+            data.common.document_url,
+            "https://www.wanikani.com/vocabulary/おやつ"
+                .parse()
+                .expect("URL")
+        );
+        assert_eq!(data.characters, "おやつ");
+        assert_eq!(
+            data.common.meanings,
+            [Meaning {
+                accepted_answer: true,
+                primary: true,
+                meaning: "Snack".into(),
+            }]
+        );
+        assert!(data.common.auxiliary_meanings.is_empty());
+        assert_eq!(data.parts_of_speech, ["noun"]);
+        assert_eq!(data.common.meaning_mnemonic, "<reading>Oh yah! Two</reading> (<ja>おやつ</ja>) <vocabulary>snack</vocabulary>s, just for you. Imagine your two snacks. What are they? I bet they're delicious. Oh yah!\r\n\r\nYou can use <ja>おやつ</ja> to refer to a small amount of food eaten between meals, including candies and light meals like onigiri.");
+        assert_eq!(
+            data.context_sentences,
+            [
+                ContextSentence {
+                    en: "Today I had a muffin for a snack.".into(),
+                    ja: "今日はおやつにマフィンを食べた。".into()
+                },
+                ContextSentence {
+                    en: "Shall we take a snack break?".into(),
+                    ja: "そろそろおやつにする？".into()
+                },
+                ContextSentence {
+                    en: "Kaori's snacks are always homemade!".into(),
+                    ja: "カオリちゃんのおやつは、いつも手作りだよ！".into()
+                }
+            ]
+        );
+        assert_eq!(
+            data.pronunciation_audios,
+            [PronunciationAudio {
+                content_type: "audio/webm".parse().expect("Mime"),
+                url: "https://files.wanikani.com/w4yp5o02betioucki05lp6x78quy"
+                    .parse()
+                    .expect("URL"),
+                metadata: AudioMetadata {
+                    gender: Gender::Male,
+                    source_id: 44757,
+                    pronunciation: "おやつ".into(),
+                    voice_actor_id: 2,
+                    voice_actor_name: "Kenichi".into(),
+                    voice_description: "Tokyo accent".into(),
+                }
+            }]
+        );
+        assert_eq!(data.common.lesson_position, 0);
+        assert_eq!(data.common.spaced_repetition_system_id, 1);
+    }
+
+    #[test]
+    fn test_kana_serialize() {
+        let pronunciation_audios = vec![PronunciationAudio {
+            content_type: "audio/mpeg".parse().expect("Mime"),
+            url: "https://cdn.wanikani.com/audios/3018-subject-2467.ogg?1547862356"
+                .parse()
+                .expect("URL"),
+            metadata: AudioMetadata {
+                gender: Gender::Male,
+                source_id: 555,
+                pronunciation: "Pro".into(),
+                voice_actor_id: 5,
+                voice_actor_name: "Steve".into(),
+                voice_description: "Example of metadata".into(),
+            },
+        }];
+        let parts_of_speech = vec!["test".to_string()];
+        let meanings = vec![Meaning {
+            accepted_answer: true,
+            primary: true,
+            meaning: "test meaning".into(),
+        }];
+        let context_sentences = vec![ContextSentence {
+            en: "This is a pen".into(),
+            ja: "これはペンです".into(),
+        }];
+        let auxiliary_meanings = vec![];
+        let common = SubjectCommon {
+            auxiliary_meanings,
+            created_at: Utc::now(),
+            document_url: "https://some.url/test".parse().expect("URL"),
+            hidden_at: None,
+            lesson_position: 8,
+            level: 1,
+            meaning_mnemonic: "This is a test mnemonic".into(),
+            meanings,
+            slug: "💩".into(),
+            spaced_repetition_system_id: 69,
+        };
+        let data = KanaVocabulary {
+            characters: "💩🏩".into(),
+            common,
+            context_sentences,
+            parts_of_speech,
+            pronunciation_audios,
+        };
+        let common = ResourceCommon {
+            data_updated_at: Some(Utc::now()),
+            object: ResourceType::Vocabulary,
+            url: "https://some.url/common".parse().expect("URL"),
+        };
+
+        let vocab = Resource {
+            common,
+            data,
+            id: 55555,
+        };
+
+        let json = serde_json::to_string(&vocab).expect("Serialize");
+
+        let subject: Resource<Subject> = serde_json::from_str(&json).expect("Deserialize");
+
+        let Subject::KanaVocabulary(subject_inner) = subject.data else {
             panic!("Incorrect subject type");
         };
 
