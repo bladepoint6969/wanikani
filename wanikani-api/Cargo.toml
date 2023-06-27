@@ -4,12 +4,12 @@ categories = ["api-bindings"]
 description = "A Rust implementation of a Wanikani API client"
 documentation = "https://docs.rs/wanikani-api"
 edition = "2021"
+homepage = "https://github.com/bladepoint6969/wanikani"
 include = ["src/**/*.rs", "LICENSE-APACHE", "LICENSE-MIT", "README.md"]
 keywords = ["wanikani", "wk"]
 license = "MIT OR Apache-2.0"
 name = "wanikani-api"
 readme = "README.md"
-homepage = "https://github.com/bladepoint6969/wanikani"
 repository = "https://github.com/bladepoint6969/wanikani"
 rust-version = "1.62.1"
 version = "0.1.0"
@@ -21,7 +21,7 @@ chrono = {version = "0.4", default-features = false, features = ["serde", "clock
 log = "0.4"
 mime = "0.3"
 mime_serde_shim = "0.2"
-reqwest = { version = "0.11", features = ["json"], optional = true, default-features = false }
+reqwest = {version = "0.11", features = ["json"], optional = true, default-features = false}
 serde = {version = "1", features = ["derive"]}
 thiserror = "1"
 url = {version = "2", features = ["serde"]}
@@ -30,20 +30,21 @@ uuid = {version = "1", features = ["v4", "serde"]}
 [features]
 client = ["reqwest"]
 default = ["client", "default-tls", "model"]
+default-tls = ["reqwest/default-tls"]
 level_progression = []
-model = ["level_progression", "subject", "summary", "user", "voice_actor"]
+model = ["level_progression", "study_material", "subject", "summary", "user", "voice_actor"]
+rustls-tls = ["reqwest/rustls-tls"]
+study_material = []
 subject = []
 summary = []
 user = []
 voice_actor = []
-default-tls = ["reqwest/default-tls"]
-rustls-tls = ["reqwest/rustls-tls"]
 
 [dev-dependencies]
 dotenvy = "0.15"
 env_logger = "0.10"
 serde_json = "1"
-tokio = { version = "1", features = ["macros", "time", "rt"] }
+tokio = {version = "1", features = ["macros", "time", "rt"]}
 
 [[example]]
 name = "fetch_subjects"

@@ -43,6 +43,70 @@ impl Filter for IdFilter {
     }
 }
 
+#[cfg(feature = "study_material")]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+/// The collection of study material records will be filtered on the parameters
+/// provided.
+pub struct StudyMaterialFilter {
+    /// Return study materials with a matching value in the `hidden` attribute.
+    pub hidden: Option<bool>,
+    /// Only study material records where `data.id` matches one of the array
+    /// values are returned.
+    pub ids: Option<Vec<u64>>,
+    /// Only study material records where `data.subject_id` matches one of the
+    /// array values are returned.
+    pub subject_ids: Option<Vec<u64>>,
+    /// Only study material records where `data.subject_type` matches one of the
+    /// array values are returned.
+    pub subject_types: Option<Vec<crate::subject::SubjectType>>,
+    /// Only study material records updated after this time are returned.
+    pub updated_after: Option<Timestamp>,
+}
+
+#[cfg(feature = "study_material")]
+impl Filter for StudyMaterialFilter {
+    fn apply_filters(&self, url: &mut Url) {
+        let mut query = url.query_pairs_mut();
+        if let Some(ref ids) = self.ids {
+            query.append_pair(
+                "ids",
+                ids.iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+                    .join(",")
+                    .as_str(),
+            );
+        }
+        if let Some(ref ids) = self.subject_ids {
+            query.append_pair(
+                "subject_ids",
+                ids.iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+                    .join(",")
+                    .as_str(),
+            );
+        }
+        if let Some(ref types) = self.subject_types {
+            query.append_pair(
+                "subject_types",
+                types
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+                    .join(",")
+                    .as_str(),
+            );
+        }
+        if let Some(hidden) = self.hidden {
+            query.append_pair("hidden", hidden.to_string().as_str());
+        }
+        if let Some(updated_after) = self.updated_after {
+            query.append_pair("updated_after", updated_after.to_rfc3339().as_str());
+        }
+    }
+}
+
 #[cfg(feature = "subject")]
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 /// Filter parameters for subjects
@@ -435,6 +499,51 @@ mod subject {
     }
 }
 
+#[cfg(feature = "study_material")]
+mod study_material {
+    use crate::{study_material::StudyMaterial, Collection, Error, Resource};
+
+    use super::{Filter, StudyMaterialFilter, WKClient};
+
+    const STUDY_MATERIAL_PATH: &str = "study_materials";
+
+    impl WKClient {
+        /// Returns a collection of all study material, ordered by ascending
+        /// `created_at`, 500 at a time.
+        pub async fn get_study_materials(
+            &self,
+            filters: &StudyMaterialFilter,
+        ) -> Result<Collection<StudyMaterial>, Error> {
+            let mut url = self.base_url.clone();
+            url.path_segments_mut()
+                .expect("Valid URL")
+                .push(STUDY_MATERIAL_PATH);
+
+            filters.apply_filters(&mut url);
+
+            let req = self.client.get(url);
+
+            self.do_request("get_subjects", req).await
+        }
+
+        /// Retrieves a specific study material by its `id`.
+        pub async fn get_specific_study_material(
+            &self,
+            id: u64,
+        ) -> Result<Resource<StudyMaterial>, Error> {
+            let mut url = self.base_url.clone();
+            url.path_segments_mut()
+                .expect("Valid URL")
+                .push(STUDY_MATERIAL_PATH)
+                .push(&id.to_string());
+
+            let req = self.client.get(url);
+
+            self.do_request("get_specific_subject", req).await
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use chrono::{Duration, Utc};
@@ -594,12 +703,18 @@ mod tests {
         init_tests();
 
         let client = create_client();
-        let id = env::var("LEVEL_PROGRESSION_ID")
-            .expect("LEVEL_PROGRESSION_ID set")
-            .parse()
-            .expect("LEVEL_PROGRESSION_ID is u64");
+        let progressions = client
+            .get_level_progressions(&Default::default())
+            .await
+            .expect("Get all progs");
 
-        assert!(client.get_specific_level_progression(id).await.is_ok());
+        if let Some(prog) = progressions.data.get(0) {
+            assert!(client.get_specific_level_progression(prog.id).await.is_ok());
+        } else {
+            log::warn!(
+                "No level progressions detected, this test should not be considered reliable"
+            );
+        }
     }
 
     #[cfg(feature = "subject")]
@@ -682,6 +797,40 @@ mod tests {
         assert_eq!(subject.id, vocab.id);
         assert_eq!(subject.common, vocab.common);
         assert_eq!(subject_inner, vocab.data);
+    }
+
+    #[cfg(feature = "study_material")]
+    #[tokio::test]
+    async fn test_get_study_materials() {
+        init_tests();
+
+        let client = create_client();
+
+        assert!(client
+            .get_study_materials(&Default::default())
+            .await
+            .is_ok());
+    }
+
+    #[cfg(feature = "study_material")]
+    #[tokio::test]
+    async fn test_get_specific_study_material() {
+        init_tests();
+
+        let client = create_client();
+
+        let study_materials = client
+            .get_study_materials(&Default::default())
+            .await
+            .expect("Get all study_materials");
+
+        if let Some(prog) = study_materials.data.get(0) {
+            assert!(client.get_specific_study_material(prog.id).await.is_ok());
+        } else {
+            log::warn!(
+                "No study materials detected, this test should not be considered reliable"
+            );
+        }
     }
 
     #[cfg(feature = "summary")]

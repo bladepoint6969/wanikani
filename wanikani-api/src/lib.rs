@@ -487,6 +487,9 @@ pub mod client;
 #[cfg(feature = "level_progression")]
 pub mod level_progression;
 
+#[cfg(feature = "study_material")]
+pub mod study_material;
+
 #[cfg(feature = "subject")]
 pub mod subject;
 #[cfg(not(feature = "subject"))]
@@ -603,6 +606,9 @@ pub enum ResourceType {
     #[cfg(feature = "level_progression")]
     /// A `level_progression
     LevelProgression,
+    #[cfg(feature = "study_material")]
+    /// A `study_material`
+    StudyMaterial,
     #[cfg(feature = "subject")]
     /// A radical.
     Radical,
