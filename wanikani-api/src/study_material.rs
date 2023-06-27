@@ -102,13 +102,79 @@ impl Serialize for CreateStudyMaterial {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+/// Updates a study material for a specific `id`.
+pub struct UpdateStudyMaterial {
+    /// Meaning notes specific for the subject.
+    pub meaning_note: Option<String>,
+    /// Reading notes specific for the subject.
+    pub reading_note: Option<String>,
+    /// Meaning synonyms for the subject.
+    pub meaning_synonyms: Option<Vec<String>>,
+}
 
+#[derive(Deserialize, Serialize)]
+struct UpdateStudyMaterialCopy {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    meaning_note: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    reading_note: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    meaning_synonyms: Option<Vec<String>>,
+}
+
+impl From<UpdateStudyMaterialCopy> for UpdateStudyMaterial {
+    fn from(value: UpdateStudyMaterialCopy) -> Self {
+        Self {
+            meaning_note: value.meaning_note,
+            meaning_synonyms: value.meaning_synonyms,
+            reading_note: value.reading_note,
+        }
+    }
+}
+
+impl From<&UpdateStudyMaterial> for UpdateStudyMaterialCopy {
+    fn from(value: &UpdateStudyMaterial) -> Self {
+        Self {
+            meaning_note: value.meaning_note.clone(),
+            reading_note: value.reading_note.clone(),
+            meaning_synonyms: value.meaning_synonyms.clone(),
+        }
+    }
+}
+
+#[derive(Deserialize, Serialize)]
+struct UpdateStudyMaterialWrapper {
+    study_material: UpdateStudyMaterialCopy,
+}
+
+impl<'de> Deserialize<'de> for UpdateStudyMaterial {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let wrapper = UpdateStudyMaterialWrapper::deserialize(deserializer)?;
+        Ok(wrapper.study_material.into())
+    }
+}
+
+impl Serialize for UpdateStudyMaterial {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let wrapper = UpdateStudyMaterialWrapper {
+            study_material: self.into()
+        };
+        wrapper.serialize(serializer)
+    }
+}
 
 #[cfg(test)]
 mod tests {
     use chrono::{DateTime, Utc};
 
-    use crate::{cross_feature::SubjectType, Resource, ResourceCommon, ResourceType};
+    use crate::{cross_feature::SubjectType, Resource, ResourceCommon, ResourceType, study_material::UpdateStudyMaterial};
 
     use super::{CreateStudyMaterial, StudyMaterial};
 
@@ -201,6 +267,33 @@ mod tests {
         assert_eq!(
             json,
             r#"{"study_material":{"subject_id":444,"meaning_note":"Meaning"}}"#
+        );
+    }
+
+        #[test]
+    fn test_deserialize_update_study_material() {
+        let json = include_str!("../test_files/update_study_material.json");
+
+        let create: UpdateStudyMaterial = serde_json::from_str(json).expect("Deserialize");
+        assert_eq!(
+            create.meaning_note.expect("Meaning"),
+            "The two grounds is too much"
+        );
+        assert_eq!(create.reading_note.expect("Reading"), "This is tsu much");
+        assert_eq!(create.meaning_synonyms.expect("Synonyms"), ["double"]);
+    }
+
+    #[test]
+    fn test_serialize_update_study_material() {
+        let create = UpdateStudyMaterial {
+            meaning_note: Some("Meaning".into()),
+            ..Default::default()
+        };
+
+        let json = serde_json::to_string(&create).expect("Serialize");
+        assert_eq!(
+            json,
+            r#"{"study_material":{"meaning_note":"Meaning"}}"#
         );
     }
 }

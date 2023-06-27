@@ -501,7 +501,7 @@ mod subject {
 
 #[cfg(feature = "study_material")]
 mod study_material {
-    use crate::{study_material::{StudyMaterial, CreateStudyMaterial}, Collection, Error, Resource};
+    use crate::{study_material::{StudyMaterial, CreateStudyMaterial, UpdateStudyMaterial}, Collection, Error, Resource};
 
     use super::{Filter, StudyMaterialFilter, WKClient};
 
@@ -555,6 +555,19 @@ mod study_material {
             let req = self.client.post(url).json(material);
 
             self.do_request("create_study_material", req).await
+        }
+
+        /// Updates a study material for a specific `id`.
+        pub async fn update_study_material(&self, id: u64, material: &UpdateStudyMaterial) -> Result<Resource<StudyMaterial>, Error> {
+            let mut url = self.base_url.clone();
+            url.path_segments_mut()
+                .expect("Valid URL")
+                .push(STUDY_MATERIAL_PATH)
+                .push(id.to_string().as_str());
+
+            let req = self.client.put(url).json(material);
+
+            self.do_request("update_study_material", req).await
         }
     }
 }
@@ -841,6 +854,35 @@ mod tests {
 
         if let Some(prog) = study_materials.data.get(0) {
             assert!(client.get_specific_study_material(prog.id).await.is_ok());
+        } else {
+            log::warn!(
+                "No study materials detected, this test should not be considered reliable"
+            );
+        }
+    }
+
+    #[cfg(feature = "study_material")]
+    #[tokio::test]
+    async fn test_update_study_material() {
+        use crate::study_material::UpdateStudyMaterial;
+
+        init_tests();
+
+        let client = create_client();
+
+        let study_materials = client
+            .get_study_materials(&Default::default())
+            .await
+            .expect("Get all study_materials");
+
+        if let Some(prog) = study_materials.data.get(0) {
+            let update = UpdateStudyMaterial {
+                meaning_note: prog.data.meaning_note.clone(),
+                ..Default::default()
+            };
+
+            let new_prog = client.update_study_material(prog.id, &update).await.expect("Successful Update");
+            assert_eq!(prog, &new_prog);
         } else {
             log::warn!(
                 "No study materials detected, this test should not be considered reliable"
