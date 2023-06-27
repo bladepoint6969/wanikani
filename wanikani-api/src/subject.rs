@@ -90,6 +90,34 @@ impl From<Radical> for Subject {
 /// Error returned when a [`Subject`] fails due to being the wrong type
 pub struct SubjectConversionError(SubjectType, SubjectType);
 
+impl TryFrom<&Subject> for Radical {
+    type Error = SubjectConversionError;
+    fn try_from(value: &Subject) -> Result<Self, Self::Error> {
+        value.to_owned().try_into()
+    }
+}
+
+impl TryFrom<&Subject> for Kanji {
+    type Error = SubjectConversionError;
+    fn try_from(value: &Subject) -> Result<Self, Self::Error> {
+        value.to_owned().try_into()
+    }
+}
+
+impl TryFrom<&Subject> for Vocabulary {
+    type Error = SubjectConversionError;
+    fn try_from(value: &Subject) -> Result<Self, Self::Error> {
+        value.to_owned().try_into()
+    }
+}
+
+impl TryFrom<&Subject> for KanaVocabulary {
+    type Error = SubjectConversionError;
+    fn try_from(value: &Subject) -> Result<Self, Self::Error> {
+        value.to_owned().try_into()
+    }
+}
+
 impl TryFrom<Subject> for Radical {
     type Error = SubjectConversionError;
     fn try_from(value: Subject) -> Result<Self, Self::Error> {
@@ -160,12 +188,12 @@ impl From<KanaVocabulary> for Subject {
     }
 }
 
-impl<T> From<&T> for Subject
+impl<T: Clone> From<&T> for Subject
 where
-    T: Into<Subject>,
+    Subject: From<T>,
 {
     fn from(value: &T) -> Self {
-        value.to_owned().into()
+        value.clone().into()
     }
 }
 
@@ -459,7 +487,10 @@ mod tests {
         // Prove that Subject and Radical Deserializations are identical
         assert_eq!(radical.id, subject.id);
         assert_eq!(radical.common, subject.common);
-        assert_eq!(radical.data, subject.data.try_into().expect("Incorrect subject type"));
+        assert_eq!(
+            radical.data,
+            subject.data.try_into().expect("Incorrect subject type")
+        );
 
         assert_eq!(radical.id, 1);
 
@@ -562,7 +593,10 @@ mod tests {
 
         assert_eq!(radical.common, subject.common);
         assert_eq!(radical.id, subject.id);
-        assert_eq!(radical.data, subject.data.try_into().expect("Incorrect subject type"));
+        assert_eq!(
+            radical.data,
+            subject.data.try_into().expect("Incorrect subject type")
+        );
     }
 
     #[test]
@@ -576,7 +610,10 @@ mod tests {
         // Prove that Subject and Kanji Deserializations are identical
         assert_eq!(kanji.id, subject.id);
         assert_eq!(kanji.common, subject.common);
-        assert_eq!(kanji.data, subject.data.try_into().expect("Incorrect subject type"));
+        assert_eq!(
+            kanji.data,
+            subject.data.try_into().expect("Incorrect subject type")
+        );
 
         assert_eq!(kanji.id, 440);
 
@@ -708,7 +745,10 @@ mod tests {
 
         assert_eq!(kanji.common, subject.common);
         assert_eq!(kanji.id, subject.id);
-        assert_eq!(kanji.data, subject.data.try_into().expect("Incorrect subject type"));
+        assert_eq!(
+            kanji.data,
+            subject.data.try_into().expect("Incorrect subject type")
+        );
     }
 
     #[test]
@@ -722,7 +762,10 @@ mod tests {
         // Prove that Subject and Vocab Deserializations are identical
         assert_eq!(vocab.id, subject.id);
         assert_eq!(vocab.common, subject.common);
-        assert_eq!(vocab.data, subject.data.try_into().expect("Incorrect subject type"));
+        assert_eq!(
+            vocab.data,
+            subject.data.try_into().expect("Incorrect subject type")
+        );
 
         assert_eq!(vocab.id, 2467);
 
@@ -909,7 +952,10 @@ mod tests {
         // Prove that Subject and Vocab Deserializations are identical
         assert_eq!(vocab.id, subject.id);
         assert_eq!(vocab.common, subject.common);
-        assert_eq!(vocab.data, subject.data.try_into().expect("Incorrect subject type"));
+        assert_eq!(
+            vocab.data,
+            subject.data.try_into().expect("Incorrect subject type")
+        );
     }
 
     #[test]
@@ -924,7 +970,10 @@ mod tests {
         // Prove that Subject and Vocab Deserializations are identical
         assert_eq!(vocab.id, subject.id);
         assert_eq!(vocab.common, subject.common);
-        assert_eq!(vocab.data, subject.data.try_into().expect("Incorrect subject type"));
+        assert_eq!(
+            vocab.data,
+            subject.data.try_into().expect("Incorrect subject type")
+        );
 
         assert_eq!(vocab.id, 9210);
 
@@ -1070,6 +1119,38 @@ mod tests {
         // Prove that Subject and Vocab Deserializations are identical
         assert_eq!(vocab.id, subject.id);
         assert_eq!(vocab.common, subject.common);
-        assert_eq!(vocab.data, subject.data.try_into().expect("Incorrect subject type"));
+        assert_eq!(
+            vocab.data,
+            subject.data.try_into().expect("Incorrect subject type")
+        );
+    }
+
+    #[test]
+    fn test_from_ref() {
+        let radical = Radical {
+            amalgamation_subject_ids: vec![],
+            character_images: vec![],
+            characters: Some("string".into()),
+            common: SubjectCommon {
+                auxiliary_meanings: vec![],
+                created_at: Utc::now(),
+                document_url: "https://xkcd.com/1".parse().expect("URL"),
+                hidden_at: None,
+                lesson_position: 5,
+                level: 2,
+                meaning_mnemonic: "Meaning mnemonic".into(),
+                meanings: vec![],
+                slug: "slug".into(),
+                spaced_repetition_system_id: 5,
+            },
+        };
+
+        let rad_ref = &radical;
+
+        let subject: Subject = rad_ref.into();
+
+        let new_radical: Radical = (&subject).try_into().expect("Into Radical");
+
+        assert_eq!(radical, new_radical);
     }
 }
