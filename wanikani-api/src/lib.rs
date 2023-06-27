@@ -491,7 +491,7 @@ pub mod level_progression;
 pub mod subject;
 #[cfg(not(feature = "subject"))]
 pub mod subject {
-    pub use crate::subject_type::SubjectType;
+    pub use crate::cross_feature::SubjectType;
 }
 
 #[cfg(feature = "summary")]
@@ -502,8 +502,12 @@ pub mod user;
 
 #[cfg(feature = "voice_actor")]
 pub mod voice_actor;
+#[cfg(not(feature = "voice_actor"))]
+pub mod voice_actor {
+    pub use crate::cross_feature::Gender;
+}
 
-mod subject_type {
+mod cross_feature {
     use std::{error::Error, fmt::Display};
 
     use serde::{Deserialize, Serialize};
@@ -575,6 +579,14 @@ mod subject_type {
                 SubjectType::Vocabulary => Self::Vocabulary,
             }
         }
+    }
+
+    #[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
+    #[serde(rename_all = "snake_case")]
+    #[allow(missing_docs)]
+    pub enum Gender {
+        Male,
+        Female,
     }
 }
 

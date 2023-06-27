@@ -1,9 +1,6 @@
 use std::{env, io};
 
-use wanikani_api::{
-    client::{SubjectFilter, WKClient},
-    subject::SubjectType,
-};
+use wanikani_api::client::{SubjectFilter, WKClient};
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
@@ -14,10 +11,7 @@ async fn main() {
 
     let client = WKClient::new(api_key, reqwest::Client::default());
 
-    let filters = SubjectFilter {
-        types: Some(vec![SubjectType::Radical, SubjectType::Kanji]),
-        ..SubjectFilter::default()
-    };
+    let filters = SubjectFilter::default();
 
     let mut collection = client.get_subjects(&filters).await.expect("Get Subjects");
 

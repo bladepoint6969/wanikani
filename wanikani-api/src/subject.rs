@@ -26,8 +26,8 @@ use mime::Mime;
 use serde::{Deserialize, Serialize};
 use url::Url;
 
-pub use crate::subject_type::*;
-use crate::Timestamp;
+pub use crate::cross_feature::*;
+use crate::{voice_actor::Gender, Timestamp};
 
 /// The `FetchSubject` trait exists to help avoid footguns when requesting
 /// specific subjects with the API client.
@@ -36,15 +36,17 @@ pub trait FetchSubject: private::Sealed + for<'de> Deserialize<'de> {}
 impl FetchSubject for Subject {}
 impl FetchSubject for Radical {}
 impl FetchSubject for Kanji {}
+impl FetchSubject for Vocabulary {}
 
 mod private {
-    use super::{Kanji, Radical, Subject};
+    use super::{Kanji, Radical, Subject, Vocabulary};
 
     pub trait Sealed {}
 
     impl Sealed for Subject {}
     impl Sealed for Radical {}
     impl Sealed for Kanji {}
+    impl Sealed for Vocabulary {}
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
@@ -56,6 +58,8 @@ pub enum Subject {
     Radical(Radical),
     /// A Kanji
     Kanji(Kanji),
+    /// A Vocabulary word
+    Vocabulary(Vocabulary),
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
@@ -229,6 +233,80 @@ pub enum KanjiReadingType {
     Onyomi,
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+/// A kanji-based vocabulary word.
+pub struct Vocabulary {
+    #[serde(flatten)]
+    /// Attributes common to all subjects.
+    pub common: SubjectCommon,
+    /// The UTF-8 characters for the subject, including kanji and hiragana.
+    pub characters: String,
+    /// An array of numeric identifiers for the kanji that make up this
+    /// vocabulary. Note that these are the subjects that must be have passed
+    /// assignments in order to unlock this subject's assignment.
+    pub component_subject_ids: Vec<u64>,
+    /// A collection of context sentences.
+    pub context_sentences: Vec<ContextSentence>,
+    /// Parts of speech.
+    pub parts_of_speech: Vec<String>,
+    /// A collection of pronunciation audio.
+    pub pronunciation_audios: Vec<PronunciationAudio>,
+    /// Selected readings for the vocabulary.
+    pub readings: Vec<VocabularyReading>,
+    /// The subject's reading mnemonic.
+    pub reading_mnemonic: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+/// A context sentence that shows how the vocabulary is used.
+pub struct ContextSentence {
+    /// English translation of the sentence.
+    pub en: String,
+    /// Japanese context sentence.
+    pub ja: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+/// Audio files that demonstrate how the vocabulary is pronounced.
+pub struct PronunciationAudio {
+    /// The location of the audio.
+    pub url: Url,
+    #[serde(with = "mime_serde_shim")]
+    /// The content type of the audio. Currently the API delivers `audio/mpeg`
+    /// and `audio/ogg`.
+    pub content_type: Mime,
+    /// Details about the pronunciation audio.
+    pub metadata: AudioMetadata,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+/// A selected reading for the vocabulary.
+pub struct VocabularyReading {
+    /// Indicates if the reading is used to evaluate user input for correctness.
+    pub accepted_answer: bool,
+    /// Indicates priority in the WaniKani system.
+    pub primary: bool,
+    /// A singular subject reading.
+    pub reading: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+/// Details on a pronunciation audio clip.
+pub struct AudioMetadata {
+    /// The gender of the voice actor.
+    pub gender: Gender,
+    /// A unique ID shared between same source pronunciation audio.
+    pub source_id: u64,
+    /// Vocabulary being pronounced in kana.
+    pub pronunciation: String,
+    /// A unique ID belonging to the voice actor.
+    pub voice_actor_id: u64,
+    /// Humanized name of the voice actor.
+    pub voice_actor_name: String,
+    /// Description of the voice.
+    pub voice_description: String,
+}
+
 #[cfg(test)]
 mod tests {
     use std::vec;
@@ -236,9 +314,11 @@ mod tests {
     use chrono::{DateTime, Utc};
 
     use crate::{
+        cross_feature::Gender,
         subject::{
-            AuxilliaryMeaning, CharacterImage, ImageMetadata, Kanji, KanjiReading,
-            KanjiReadingType, Meaning, MeaningType,
+            AudioMetadata, AuxilliaryMeaning, CharacterImage, ContextSentence, ImageMetadata,
+            Kanji, KanjiReading, KanjiReadingType, Meaning, MeaningType, PronunciationAudio,
+            Vocabulary, VocabularyReading,
         },
         Resource, ResourceCommon, ResourceType,
     };
@@ -518,5 +598,213 @@ mod tests {
             panic!("Incorrect subject type");
         };
         assert_eq!(subject_inner, kanji.data);
+    }
+
+    #[test]
+    fn test_vocab_deserialize() {
+        let json = include_str!("../test_files/vocabulary.json");
+
+        let subject: Resource<Subject> = serde_json::from_str(json).expect("Deserialize subject");
+        let Subject::Vocabulary(subject_inner) = subject.data else {
+            panic!("Incorrect subject type");
+        };
+
+        let vocab: Resource<Vocabulary> = serde_json::from_str(json).expect("Deserialize kanji");
+
+        // Prove that Subject and Vocab Deserializations are identical
+        assert_eq!(vocab.id, subject.id);
+        assert_eq!(vocab.common, subject.common);
+        assert_eq!(vocab.data, subject_inner);
+
+        assert_eq!(vocab.id, 2467);
+
+        let common = vocab.common;
+        assert_eq!(common.object, ResourceType::Vocabulary);
+        assert_eq!(
+            common.url,
+            "https://api.wanikani.com/v2/subjects/2467"
+                .parse()
+                .expect("URL")
+        );
+        assert_eq!(
+            common.data_updated_at.expect("Timestamp"),
+            DateTime::parse_from_rfc3339("2018-12-12T23:09:52.234049Z").expect("Timestamp")
+        );
+
+        let data = vocab.data;
+        assert_eq!(
+            data.common.auxiliary_meanings,
+            [AuxilliaryMeaning {
+                meaning: "1".into(),
+                meaning_type: MeaningType::Whitelist,
+            }]
+        );
+        assert_eq!(data.characters, "一");
+        assert_eq!(data.component_subject_ids, [440]);
+        assert_eq!(
+            data.context_sentences,
+            [
+                ContextSentence {
+                    en: "Let’s meet up once.".into(),
+                    ja: "一ど、あいましょう。".into()
+                },
+                ContextSentence {
+                    en: "First place was an American.".into(),
+                    ja: "一いはアメリカ人でした。".into()
+                },
+                ContextSentence {
+                    en: "I’m the weakest man in the world.".into(),
+                    ja: "ぼくはせかいで一ばんよわい。".into()
+                }
+            ]
+        );
+        assert_eq!(
+            data.common.created_at,
+            DateTime::parse_from_rfc3339("2012-02-28T08:04:47.000000Z").expect("Timestamp")
+        );
+        assert_eq!(
+            data.common.document_url,
+            "https://www.wanikani.com/vocabulary/%E4%B8%80"
+                .parse()
+                .expect("URL")
+        );
+        assert!(data.common.hidden_at.is_none());
+        assert_eq!(data.common.lesson_position, 44);
+        assert_eq!(data.common.level, 1);
+        assert_eq!(
+            data.common.meanings,
+            [Meaning {
+                meaning: "One".into(),
+                primary: true,
+                accepted_answer: true
+            }]
+        );
+        assert_eq!(data.common.meaning_mnemonic, "As is the case with most vocab words that consist of a single kanji, this vocab word has the same meaning as the kanji it parallels, which is <vocabulary>one</vocabulary>.");
+        assert_eq!(data.parts_of_speech, ["numeral"]);
+        assert_eq!(
+            data.pronunciation_audios,
+            [
+                PronunciationAudio {
+                    content_type: "audio/mpeg".parse().expect("Mime"),
+                    url: "https://cdn.wanikani.com/audios/3020-subject-2467.mp3?1547862356"
+                        .parse()
+                        .expect("URL"),
+                    metadata: AudioMetadata {
+                        gender: Gender::Male,
+                        source_id: 2711,
+                        voice_actor_id: 2,
+                        pronunciation: "いち".into(),
+                        voice_actor_name: "Kenichi".into(),
+                        voice_description: "Tokyo accent".into(),
+                    },
+                },
+                PronunciationAudio {
+                    content_type: "audio/ogg".parse().expect("Mime"),
+                    url: "https://cdn.wanikani.com/audios/3018-subject-2467.ogg?1547862356"
+                        .parse()
+                        .expect("URL"),
+                    metadata: AudioMetadata {
+                        gender: Gender::Male,
+                        source_id: 2711,
+                        voice_actor_id: 2,
+                        pronunciation: "いち".into(),
+                        voice_actor_name: "Kenichi".into(),
+                        voice_description: "Tokyo accent".into(),
+                    }
+                }
+            ]
+        );
+        assert_eq!(
+            data.readings,
+            [VocabularyReading {
+                accepted_answer: true,
+                primary: true,
+                reading: "いち".into(),
+            }]
+        );
+        assert_eq!(data.reading_mnemonic, "When a vocab word is all alone and has no okurigana (hiragana attached to kanji) connected to it, it usually uses the kun'yomi reading. Numbers are an exception, however. When a number is all alone, with no kanji or okurigana, it is going to be the on'yomi reading, which you learned with the kanji.  Just remember this exception for alone numbers and you'll be able to read future number-related vocab to come.");
+        assert_eq!(data.common.slug, "一");
+        assert_eq!(data.common.spaced_repetition_system_id, 1);
+    }
+
+    #[test]
+    fn test_vocab_serialize() {
+        let readings = vec![VocabularyReading {
+            accepted_answer: true,
+            primary: true,
+            reading: "this is a test reading".into(),
+        }];
+        let pronunciation_audios = vec![PronunciationAudio {
+            content_type: "audio/mpeg".parse().expect("Mime"),
+            url: "https://cdn.wanikani.com/audios/3018-subject-2467.ogg?1547862356"
+                .parse()
+                .expect("URL"),
+            metadata: AudioMetadata {
+                gender: Gender::Male,
+                source_id: 555,
+                pronunciation: "Pro".into(),
+                voice_actor_id: 5,
+                voice_actor_name: "Steve".into(),
+                voice_description: "Example of metadata".into(),
+            },
+        }];
+        let parts_of_speech = vec!["test".to_string()];
+        let meanings = vec![Meaning {
+            accepted_answer: true,
+            primary: true,
+            meaning: "test meaning".into(),
+        }];
+        let context_sentences = vec![ContextSentence {
+            en: "This is a pen".into(),
+            ja: "これはペンです".into(),
+        }];
+        let component_subject_ids = vec![6, 7, 3];
+        let auxiliary_meanings = vec![];
+        let common = SubjectCommon {
+            auxiliary_meanings,
+            created_at: Utc::now(),
+            document_url: "https://some.url/test".parse().expect("URL"),
+            hidden_at: None,
+            lesson_position: 8,
+            level: 1,
+            meaning_mnemonic: "This is a test mnemonic".into(),
+            meanings,
+            slug: "💩".into(),
+            spaced_repetition_system_id: 69,
+        };
+        let data = Vocabulary {
+            characters: "💩🏩".into(),
+            common,
+            component_subject_ids,
+            context_sentences,
+            parts_of_speech,
+            pronunciation_audios,
+            reading_mnemonic: "this is another mnemonic".into(),
+            readings,
+        };
+        let common = ResourceCommon {
+            data_updated_at: Some(Utc::now()),
+            object: ResourceType::Vocabulary,
+            url: "https://some.url/common".parse().expect("URL"),
+        };
+
+        let vocab = Resource {
+            common,
+            data,
+            id: 55555,
+        };
+
+        let json = serde_json::to_string(&vocab).expect("Serialize");
+
+        let subject: Resource<Subject> = serde_json::from_str(&json).expect("Deserialize");
+
+        let Subject::Vocabulary(subject_inner) = subject.data else {
+            panic!("Incorrect subject type");
+        };
+
+        // Prove that Subject and Vocab Deserializations are identical
+        assert_eq!(vocab.id, subject.id);
+        assert_eq!(vocab.common, subject.common);
+        assert_eq!(vocab.data, subject_inner);
     }
 }

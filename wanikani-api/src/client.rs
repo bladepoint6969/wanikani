@@ -7,7 +7,7 @@ use reqwest::{header::HeaderMap, Client, RequestBuilder, Response, StatusCode};
 use serde::Deserialize;
 use url::Url;
 
-use crate::{subject_type::SubjectType, Error, Timestamp, WanikaniError, API_VERSION, URL_BASE};
+use crate::{cross_feature::SubjectType, Error, Timestamp, WanikaniError, API_VERSION, URL_BASE};
 
 const REVISION_HEADER: &str = "Wanikani-Revision";
 
@@ -437,7 +437,7 @@ mod subject {
 
 #[cfg(test)]
 mod tests {
-    use chrono::{Utc, Duration};
+    use chrono::{Duration, Utc};
     use reqwest::Client;
     use std::env;
 
@@ -605,7 +605,7 @@ mod tests {
     #[cfg(feature = "subject")]
     #[tokio::test]
     async fn test_get_subjects() {
-        use crate::subject_type::SubjectType;
+        use crate::cross_feature::SubjectType;
 
         use super::SubjectFilter;
 
@@ -613,7 +613,11 @@ mod tests {
 
         let client = create_client();
         let filters = SubjectFilter {
-            types: Some(vec![SubjectType::Radical, SubjectType::Kanji]), // TODO: Remove when all subject types are implemented
+            types: Some(vec![
+                SubjectType::Radical,
+                SubjectType::Kanji,
+                SubjectType::Vocabulary,
+            ]), // TODO: Remove when all subject types are implemented
             levels: Some(vec![1]),
             ..SubjectFilter::default()
         };
@@ -624,7 +628,7 @@ mod tests {
     #[tokio::test]
     async fn test_get_specific_subject() {
         use crate::{
-            subject::{Kanji, Radical, Subject},
+            subject::{Kanji, Radical, Subject, Vocabulary},
             Resource,
         };
 
@@ -653,6 +657,17 @@ mod tests {
         assert_eq!(subject.id, kanji.id);
         assert_eq!(subject.common, kanji.common);
         assert_eq!(subject_inner, kanji.data);
+
+        subject = client.get_specific_subject(2467).await.expect("Get subject");
+        let vocab: Resource<Vocabulary> = client.get_specific_subject(2467).await.expect("Get vocab");
+
+        let Subject::Vocabulary(subject_inner) = subject.data else {
+            panic!("Incorrect type (Should be kanji)");
+        };
+
+        assert_eq!(subject.id, vocab.id);
+        assert_eq!(subject.common, vocab.common);
+        assert_eq!(subject_inner, vocab.data);
     }
 
     #[cfg(feature = "summary")]

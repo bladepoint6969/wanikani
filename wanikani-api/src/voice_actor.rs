@@ -2,7 +2,9 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::Timestamp;
+use crate::{Timestamp};
+
+pub use crate::cross_feature::Gender;
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 /// Specific voice actor data
@@ -15,14 +17,6 @@ pub struct VoiceActor {
     pub gender: Gender,
     /// Details about the voice actor.
     pub description: String,
-}
-
-#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
-#[serde(rename_all = "snake_case")]
-#[allow(missing_docs)]
-pub enum Gender {
-    Male,
-    Female,
 }
 
 #[cfg(test)]
