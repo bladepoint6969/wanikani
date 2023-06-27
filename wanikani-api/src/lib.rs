@@ -514,7 +514,7 @@ pub mod voice_actor {
 }
 
 mod cross_feature {
-    use std::{fmt::Display};
+    use std::fmt::Display;
 
     use serde::{Deserialize, Serialize};
 

@@ -123,7 +123,7 @@ pub struct UpdateUser {
 }
 
 mod update_prefs {
-    use serde::{ser::SerializeStruct, Deserializer, Serializer, Deserialize, Serialize};
+    use serde::{ser::SerializeStruct, Deserialize, Deserializer, Serialize, Serializer};
 
     use super::UpdatePreferences;
 
@@ -208,7 +208,7 @@ mod tests {
     use chrono::{DateTime, Utc};
     use url::Url;
 
-    use super::{Preferences, Subscription, UpdateUser, UserData, UpdatePreferences};
+    use super::{Preferences, Subscription, UpdatePreferences, UpdateUser, UserData};
 
     #[test]
     fn test_user_deserialize() {
@@ -318,7 +318,10 @@ mod tests {
         let prefs = update.preferences;
         assert!(prefs.lessons_autoplay_audio.expect("bool"));
         assert_eq!(prefs.lessons_batch_size.expect("u32"), 3);
-        assert_eq!(prefs.lessons_presentation_order.expect("enum"), LessonPresentationOrder::Shuffled);
+        assert_eq!(
+            prefs.lessons_presentation_order.expect("enum"),
+            LessonPresentationOrder::Shuffled
+        );
         assert!(prefs.reviews_autoplay_audio.expect("bool"));
         assert!(!prefs.reviews_display_srs_indicator.expect("bool"));
     }
@@ -329,11 +332,14 @@ mod tests {
             preferences: UpdatePreferences {
                 extra_study_autoplay_audio: Some(true),
                 ..Default::default()
-            }
+            },
         };
 
         let json = serde_json::to_string(&update).expect("Serialize");
 
-        assert_eq!(json, r#"{"user":{"preferences":{"extra_study_autoplay_audio":true}}}"#);
+        assert_eq!(
+            json,
+            r#"{"user":{"preferences":{"extra_study_autoplay_audio":true}}}"#
+        );
     }
 }

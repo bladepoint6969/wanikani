@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{Timestamp};
+use crate::Timestamp;
 
 pub use crate::cross_feature::Gender;
 
