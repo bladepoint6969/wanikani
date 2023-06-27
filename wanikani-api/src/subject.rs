@@ -85,6 +85,33 @@ impl From<Radical> for Subject {
     }
 }
 
+impl From<Kanji> for Subject {
+    fn from(value: Kanji) -> Self {
+        Self::Kanji(value)
+    }
+}
+
+impl From<Vocabulary> for Subject {
+    fn from(value: Vocabulary) -> Self {
+        Self::Vocabulary(value)
+    }
+}
+
+impl From<KanaVocabulary> for Subject {
+    fn from(value: KanaVocabulary) -> Self {
+        Self::KanaVocabulary(value)
+    }
+}
+
+impl<T: Clone> From<&T> for Subject
+where
+    Subject: From<T>,
+{
+    fn from(value: &T) -> Self {
+        value.clone().into()
+    }
+}
+
 #[derive(Debug, Clone, Copy, thiserror::Error)]
 #[error("Subject is not a {0}, is a {1}")]
 /// Error returned when a [`Subject`] fails due to being the wrong type
@@ -167,33 +194,6 @@ impl TryFrom<Subject> for KanaVocabulary {
                 value.subject_type(),
             )),
         }
-    }
-}
-
-impl From<Kanji> for Subject {
-    fn from(value: Kanji) -> Self {
-        Self::Kanji(value)
-    }
-}
-
-impl From<Vocabulary> for Subject {
-    fn from(value: Vocabulary) -> Self {
-        Self::Vocabulary(value)
-    }
-}
-
-impl From<KanaVocabulary> for Subject {
-    fn from(value: KanaVocabulary) -> Self {
-        Self::KanaVocabulary(value)
-    }
-}
-
-impl<T: Clone> From<&T> for Subject
-where
-    Subject: From<T>,
-{
-    fn from(value: &T) -> Self {
-        value.clone().into()
     }
 }
 
