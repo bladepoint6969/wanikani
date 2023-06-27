@@ -491,6 +491,11 @@ pub mod level_progression;
 pub mod subject;
 #[cfg(not(feature = "subject"))]
 pub mod subject {
+    //! Subjects are the radicals, kanji, vocabulary, and kana_vocabulary that
+    //! are learned through lessons and reviews. They contain basic dictionary
+    //! information, such as meanings and/or readings, and information about
+    //! their relationship to other items with WaniKani, like their level.
+
     pub use crate::cross_feature::SubjectType;
 }
 
@@ -504,15 +509,14 @@ pub mod user;
 pub mod voice_actor;
 #[cfg(not(feature = "voice_actor"))]
 pub mod voice_actor {
+    //! Available voice actors used for vocabulary reading pronunciation audio.
     pub use crate::cross_feature::Gender;
 }
 
 mod cross_feature {
-    use std::{error::Error, fmt::Display};
+    use std::{fmt::Display};
 
     use serde::{Deserialize, Serialize};
-
-    use crate::ResourceType;
 
     #[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
     #[serde(rename_all = "snake_case")]
@@ -543,7 +547,7 @@ mod cross_feature {
     #[derive(Debug, Clone, Copy)]
     /// Not all resources are subjects, so this will be returned as an error if
     /// an attempted conversion fails.
-    pub struct ConversionError(ResourceType);
+    pub struct ConversionError(crate::ResourceType);
 
     #[cfg(feature = "subject")]
     impl Display for ConversionError {
@@ -553,24 +557,24 @@ mod cross_feature {
     }
 
     #[cfg(feature = "subject")]
-    impl Error for ConversionError {}
+    impl std::error::Error for ConversionError {}
 
     #[cfg(feature = "subject")]
-    impl TryFrom<ResourceType> for SubjectType {
+    impl TryFrom<crate::ResourceType> for SubjectType {
         type Error = ConversionError;
-        fn try_from(value: ResourceType) -> Result<Self, Self::Error> {
+        fn try_from(value: crate::ResourceType) -> Result<Self, Self::Error> {
             match value {
-                ResourceType::KanaVocabulary => Ok(Self::KanaVocabulary),
-                ResourceType::Kanji => Ok(Self::Kanji),
-                ResourceType::Radical => Ok(Self::Radical),
-                ResourceType::Vocabulary => Ok(Self::Vocabulary),
+                crate::ResourceType::KanaVocabulary => Ok(Self::KanaVocabulary),
+                crate::ResourceType::Kanji => Ok(Self::Kanji),
+                crate::ResourceType::Radical => Ok(Self::Radical),
+                crate::ResourceType::Vocabulary => Ok(Self::Vocabulary),
                 r => Err(ConversionError(r)),
             }
         }
     }
 
     #[cfg(feature = "subject")]
-    impl From<SubjectType> for ResourceType {
+    impl From<SubjectType> for crate::ResourceType {
         fn from(value: SubjectType) -> Self {
             match value {
                 SubjectType::KanaVocabulary => Self::KanaVocabulary,
