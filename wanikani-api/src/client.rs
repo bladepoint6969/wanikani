@@ -501,7 +501,7 @@ mod subject {
 
 #[cfg(feature = "study_material")]
 mod study_material {
-    use crate::{study_material::StudyMaterial, Collection, Error, Resource};
+    use crate::{study_material::{StudyMaterial, CreateStudyMaterial}, Collection, Error, Resource};
 
     use super::{Filter, StudyMaterialFilter, WKClient};
 
@@ -540,6 +540,21 @@ mod study_material {
             let req = self.client.get(url);
 
             self.do_request("get_specific_subject", req).await
+        }
+
+        /// Creates a study material for a specific `subject_id`.
+        ///
+        /// The owner of the api key can only create one study_material per
+        /// `subject_id`.
+        pub async fn create_study_material(&self, material: &CreateStudyMaterial) -> Result<Resource<StudyMaterial>, Error> {
+            let mut url = self.base_url.clone();
+            url.path_segments_mut()
+                .expect("Valid URL")
+                .push(STUDY_MATERIAL_PATH);
+
+            let req = self.client.post(url).json(material);
+
+            self.do_request("create_study_material", req).await
         }
     }
 }
