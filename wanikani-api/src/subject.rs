@@ -29,16 +29,17 @@ use url::Url;
 pub use crate::cross_feature::*;
 use crate::{voice_actor::Gender, Timestamp};
 
-/// The `FetchSubject` trait exists to help avoid footguns when requesting
+/// The `WaniKaniSubject` trait exists to help avoid footguns when requesting
 /// specific subjects with the API client.
-pub trait FetchSubject: private::Sealed + for<'de> Deserialize<'de> {}
+pub trait WaniKaniSubject: private::Sealed + for<'de> Deserialize<'de> {}
 
-impl FetchSubject for Subject {}
-impl FetchSubject for Radical {}
-impl FetchSubject for Kanji {}
-impl FetchSubject for Vocabulary {}
-impl FetchSubject for KanaVocabulary {}
+impl WaniKaniSubject for Subject {}
+impl WaniKaniSubject for Radical {}
+impl WaniKaniSubject for Kanji {}
+impl WaniKaniSubject for Vocabulary {}
+impl WaniKaniSubject for KanaVocabulary {}
 
+/// This module exists to lock down the WaniKaniSubject trait.
 mod private {
     use super::{KanaVocabulary, Kanji, Radical, Subject, Vocabulary};
 
@@ -64,6 +65,108 @@ pub enum Subject {
     Vocabulary(Vocabulary),
     /// A kana-only vocabulary word
     KanaVocabulary(KanaVocabulary),
+}
+
+impl Subject {
+    /// Return the inner SubjectType of the subject
+    pub fn subject_type(&self) -> SubjectType {
+        match self {
+            Self::Radical(_) => SubjectType::Radical,
+            Self::Kanji(_) => SubjectType::Kanji,
+            Self::Vocabulary(_) => SubjectType::Vocabulary,
+            Self::KanaVocabulary(_) => SubjectType::KanaVocabulary,
+        }
+    }
+}
+
+impl From<Radical> for Subject {
+    fn from(value: Radical) -> Self {
+        Self::Radical(value)
+    }
+}
+
+#[derive(Debug, Clone, Copy, thiserror::Error)]
+#[error("Subject is not a {0}, is a {1}")]
+/// Error returned when a [`Subject`] fails due to being the wrong type
+pub struct SubjectConversionError(SubjectType, SubjectType);
+
+impl TryFrom<Subject> for Radical {
+    type Error = SubjectConversionError;
+    fn try_from(value: Subject) -> Result<Self, Self::Error> {
+        match value {
+            Subject::Radical(value) => Ok(value),
+            _ => Err(SubjectConversionError(
+                SubjectType::Radical,
+                value.subject_type(),
+            )),
+        }
+    }
+}
+
+impl TryFrom<Subject> for Kanji {
+    type Error = SubjectConversionError;
+    fn try_from(value: Subject) -> Result<Self, Self::Error> {
+        match value {
+            Subject::Kanji(value) => Ok(value),
+            _ => Err(SubjectConversionError(
+                SubjectType::Kanji,
+                value.subject_type(),
+            )),
+        }
+    }
+}
+
+impl TryFrom<Subject> for Vocabulary {
+    type Error = SubjectConversionError;
+    fn try_from(value: Subject) -> Result<Self, Self::Error> {
+        match value {
+            Subject::Vocabulary(value) => Ok(value),
+            _ => Err(SubjectConversionError(
+                SubjectType::Vocabulary,
+                value.subject_type(),
+            )),
+        }
+    }
+}
+
+impl TryFrom<Subject> for KanaVocabulary {
+    type Error = SubjectConversionError;
+    fn try_from(value: Subject) -> Result<Self, Self::Error> {
+        match value {
+            Subject::KanaVocabulary(value) => Ok(value),
+            _ => Err(SubjectConversionError(
+                SubjectType::KanaVocabulary,
+                value.subject_type(),
+            )),
+        }
+    }
+}
+
+impl From<Kanji> for Subject {
+    fn from(value: Kanji) -> Self {
+        Self::Kanji(value)
+    }
+}
+
+impl From<Vocabulary> for Subject {
+    fn from(value: Vocabulary) -> Self {
+        Self::Vocabulary(value)
+    }
+}
+
+impl From<KanaVocabulary> for Subject {
+    fn from(value: KanaVocabulary) -> Self {
+        Self::KanaVocabulary(value)
+    }
+}
+
+impl<T> From<&T> for Subject
+where
+    T: Into<Subject>,
+{
+    fn from(value: &T) -> Self {
+        value.to_owned().into()
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
@@ -350,16 +453,13 @@ mod tests {
         let json = include_str!("../test_files/radical.json");
 
         let subject: Resource<Subject> = serde_json::from_str(json).expect("Deserialize subject");
-        let Subject::Radical(subject_inner) = subject.data else {
-            panic!("Incorrect subject type");
-        };
 
         let radical: Resource<Radical> = serde_json::from_str(json).expect("Deserialize radical");
 
         // Prove that Subject and Radical Deserializations are identical
         assert_eq!(radical.id, subject.id);
         assert_eq!(radical.common, subject.common);
-        assert_eq!(radical.data, subject_inner);
+        assert_eq!(radical.data, subject.data.try_into().expect("Incorrect subject type"));
 
         assert_eq!(radical.id, 1);
 
@@ -460,12 +560,9 @@ mod tests {
 
         let subject: Resource<Subject> = serde_json::from_str(&json).expect("Deserialize");
 
-        assert_eq!(subject.common, radical.common);
-        assert_eq!(subject.id, radical.id);
-        let Subject::Radical(subject_inner) = subject.data else {
-            panic!("Incorrect subject type");
-        };
-        assert_eq!(subject_inner, radical.data);
+        assert_eq!(radical.common, subject.common);
+        assert_eq!(radical.id, subject.id);
+        assert_eq!(radical.data, subject.data.try_into().expect("Incorrect subject type"));
     }
 
     #[test]
@@ -473,16 +570,13 @@ mod tests {
         let json = include_str!("../test_files/kanji.json");
 
         let subject: Resource<Subject> = serde_json::from_str(json).expect("Deserialize subject");
-        let Subject::Kanji(subject_inner) = subject.data else {
-            panic!("Incorrect subject type");
-        };
 
         let kanji: Resource<Kanji> = serde_json::from_str(json).expect("Deserialize kanji");
 
         // Prove that Subject and Kanji Deserializations are identical
         assert_eq!(kanji.id, subject.id);
         assert_eq!(kanji.common, subject.common);
-        assert_eq!(kanji.data, subject_inner);
+        assert_eq!(kanji.data, subject.data.try_into().expect("Incorrect subject type"));
 
         assert_eq!(kanji.id, 440);
 
@@ -612,12 +706,9 @@ mod tests {
         let json = serde_json::to_string(&kanji).expect("Serialize");
         let subject: Resource<Subject> = serde_json::from_str(&json).expect("Deserialize");
 
-        assert_eq!(subject.common, kanji.common);
-        assert_eq!(subject.id, kanji.id);
-        let Subject::Kanji(subject_inner) = subject.data else {
-            panic!("Incorrect subject type");
-        };
-        assert_eq!(subject_inner, kanji.data);
+        assert_eq!(kanji.common, subject.common);
+        assert_eq!(kanji.id, subject.id);
+        assert_eq!(kanji.data, subject.data.try_into().expect("Incorrect subject type"));
     }
 
     #[test]
@@ -625,16 +716,13 @@ mod tests {
         let json = include_str!("../test_files/vocabulary.json");
 
         let subject: Resource<Subject> = serde_json::from_str(json).expect("Deserialize subject");
-        let Subject::Vocabulary(subject_inner) = subject.data else {
-            panic!("Incorrect subject type");
-        };
 
         let vocab: Resource<Vocabulary> = serde_json::from_str(json).expect("Deserialize vocab");
 
         // Prove that Subject and Vocab Deserializations are identical
         assert_eq!(vocab.id, subject.id);
         assert_eq!(vocab.common, subject.common);
-        assert_eq!(vocab.data, subject_inner);
+        assert_eq!(vocab.data, subject.data.try_into().expect("Incorrect subject type"));
 
         assert_eq!(vocab.id, 2467);
 
@@ -818,14 +906,10 @@ mod tests {
 
         let subject: Resource<Subject> = serde_json::from_str(&json).expect("Deserialize");
 
-        let Subject::Vocabulary(subject_inner) = subject.data else {
-            panic!("Incorrect subject type");
-        };
-
         // Prove that Subject and Vocab Deserializations are identical
         assert_eq!(vocab.id, subject.id);
         assert_eq!(vocab.common, subject.common);
-        assert_eq!(vocab.data, subject_inner);
+        assert_eq!(vocab.data, subject.data.try_into().expect("Incorrect subject type"));
     }
 
     #[test]
@@ -833,9 +917,6 @@ mod tests {
         let json = include_str!("../test_files/kana_vocabulary.json");
 
         let subject: Resource<Subject> = serde_json::from_str(json).expect("Deserialize subject");
-        let Subject::KanaVocabulary(subject_inner) = subject.data else {
-            panic!("Incorrect subject type");
-        };
 
         let vocab: Resource<KanaVocabulary> =
             serde_json::from_str(json).expect("Deserialize vocab");
@@ -843,7 +924,7 @@ mod tests {
         // Prove that Subject and Vocab Deserializations are identical
         assert_eq!(vocab.id, subject.id);
         assert_eq!(vocab.common, subject.common);
-        assert_eq!(vocab.data, subject_inner);
+        assert_eq!(vocab.data, subject.data.try_into().expect("Incorrect subject type"));
 
         assert_eq!(vocab.id, 9210);
 
@@ -986,13 +1067,9 @@ mod tests {
 
         let subject: Resource<Subject> = serde_json::from_str(&json).expect("Deserialize");
 
-        let Subject::KanaVocabulary(subject_inner) = subject.data else {
-            panic!("Incorrect subject type");
-        };
-
         // Prove that Subject and Vocab Deserializations are identical
         assert_eq!(vocab.id, subject.id);
         assert_eq!(vocab.common, subject.common);
-        assert_eq!(vocab.data, subject_inner);
+        assert_eq!(vocab.data, subject.data.try_into().expect("Incorrect subject type"));
     }
 }

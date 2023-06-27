@@ -7,7 +7,7 @@ use reqwest::{header::HeaderMap, Client, RequestBuilder, Response, StatusCode};
 use serde::Deserialize;
 use url::Url;
 
-use crate::{cross_feature::SubjectType, Error, Timestamp, WanikaniError, API_VERSION, URL_BASE};
+use crate::{Error, Timestamp, WanikaniError, API_VERSION, URL_BASE};
 
 const REVISION_HEADER: &str = "Wanikani-Revision";
 
@@ -51,7 +51,7 @@ pub struct SubjectFilter {
     /// returned.
     pub ids: Option<Vec<u64>>,
     /// Return subjects of the specified types.
-    pub types: Option<Vec<SubjectType>>,
+    pub types: Option<Vec<crate::subject::SubjectType>>,
     /// Return subjects of the specified slug.
     pub slugs: Option<Vec<String>>,
     /// Return subjects at the specified levels.
@@ -389,7 +389,7 @@ mod level_progression {
 #[cfg(feature = "subject")]
 mod subject {
     use crate::{
-        subject::{FetchSubject, Subject},
+        subject::{Subject, WaniKaniSubject},
         Collection, Error, Resource,
     };
 
@@ -418,7 +418,7 @@ mod subject {
 
         /// Retrieves a specific subject by its `id`. The structure of the
         /// response depends on the subject type.
-        pub async fn get_specific_subject<T: FetchSubject>(
+        pub async fn get_specific_subject<T: WaniKaniSubject>(
             &self,
             id: u64,
         ) -> Result<Resource<T>, Error> {
@@ -621,7 +621,7 @@ mod tests {
     #[tokio::test]
     async fn test_get_specific_subject() {
         use crate::{
-            subject::{Kanji, Radical, Subject, Vocabulary, KanaVocabulary},
+            subject::{KanaVocabulary, Kanji, Radical, Subject, Vocabulary},
             Resource,
         };
 
@@ -651,8 +651,12 @@ mod tests {
         assert_eq!(subject.common, kanji.common);
         assert_eq!(subject_inner, kanji.data);
 
-        subject = client.get_specific_subject(2467).await.expect("Get subject");
-        let vocab: Resource<Vocabulary> = client.get_specific_subject(2467).await.expect("Get vocab");
+        subject = client
+            .get_specific_subject(2467)
+            .await
+            .expect("Get subject");
+        let vocab: Resource<Vocabulary> =
+            client.get_specific_subject(2467).await.expect("Get vocab");
 
         let Subject::Vocabulary(subject_inner) = subject.data else {
             panic!("Incorrect type (Should be kanji)");
@@ -662,8 +666,14 @@ mod tests {
         assert_eq!(subject.common, vocab.common);
         assert_eq!(subject_inner, vocab.data);
 
-        subject = client.get_specific_subject(9177).await.expect("Get subject");
-        let vocab: Resource<KanaVocabulary> = client.get_specific_subject(9177).await.expect("Get kana vocab");
+        subject = client
+            .get_specific_subject(9177)
+            .await
+            .expect("Get subject");
+        let vocab: Resource<KanaVocabulary> = client
+            .get_specific_subject(9177)
+            .await
+            .expect("Get kana vocab");
 
         let Subject::KanaVocabulary(subject_inner) = subject.data else {
             panic!("Incorrect type (Should be kanji)");
