@@ -29,8 +29,8 @@ pub struct StudyMaterial {
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq, Default)]
 #[serde(
-    into = "crate::serde_helpers::CreateStudyMaterialWrapper",
-    from = "crate::serde_helpers::CreateStudyMaterialWrapper"
+    into = "crate::serde_helpers::study_material::CreateStudyMaterialWrapper",
+    from = "crate::serde_helpers::study_material::CreateStudyMaterialWrapper"
 )]
 /// Creates a study material for a specific subject_id.
 ///
@@ -48,8 +48,8 @@ pub struct CreateStudyMaterial {
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq, Default)]
 #[serde(
-    into = "crate::serde_helpers::UpdateStudyMaterialWrapper",
-    from = "crate::serde_helpers::UpdateStudyMaterialWrapper"
+    into = "crate::serde_helpers::study_material::UpdateStudyMaterialWrapper",
+    from = "crate::serde_helpers::study_material::UpdateStudyMaterialWrapper"
 )]
 /// Updates a study material for a specific `id`.
 pub struct UpdateStudyMaterial {
