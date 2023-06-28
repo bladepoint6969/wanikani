@@ -17,7 +17,6 @@ permissions:
 env:
   CARGO_TERM_COLOR: always
   API_KEY: ${{ secrets.wk_api_key }}
-  LEVEL_PROGRESSION_ID: ${{ secrets.level_progression_id }}
 
 jobs:
   rate_limiting:
