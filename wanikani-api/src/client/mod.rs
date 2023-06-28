@@ -220,3 +220,57 @@ fn create_client() -> WKClient {
         Client::default(),
     )
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{URL_BASE, Collection};
+
+    use super::{init_tests, create_client};
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_rate_limiting() {
+        use chrono::{DateTime, Duration, Local, Utc};
+        use tokio::time::Instant;
+
+        use crate::Error;
+
+        init_tests();
+
+        let client = create_client();
+
+        let url = format!("{}/subjects?levels=5000", URL_BASE).parse().expect("URL");
+
+        let error = loop {
+            if let Err(e) = client.get_resource_by_url::<Collection<()>>(&url).await {
+                break e;
+            }
+        };
+
+        let Error::RateLimit { error, reset_time } = error else {
+            panic!("Didn't get rate-limited");
+        };
+
+        let wait_period = reset_time - Utc::now();
+
+        log::info!(
+            "Reset time is {} Wait period is {wait_period}",
+            DateTime::<Local>::from(reset_time)
+        );
+
+        assert_eq!(error.code, 429);
+        assert_eq!(error.error.expect("Some message"), "Rate limit exceeded");
+        assert!(wait_period.num_seconds() < 60);
+        assert!(wait_period.num_milliseconds() > 0);
+
+        tokio::time::sleep_until(
+            Instant::now()
+                + (wait_period + Duration::seconds(1))
+                    .to_std()
+                    .expect("Should be short"),
+        )
+        .await;
+
+        assert!(client.get_resource_by_url::<Collection<()>>(&url).await.is_ok())
+    }
+}
