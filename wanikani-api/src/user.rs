@@ -118,36 +118,8 @@ pub enum SubscriptionType {
 /// User information update request.
 pub struct UpdateUser {
     /// Preference updates.
-    #[serde(with = "update_prefs", rename = "user")]
+    #[serde(with = "crate::serde_helpers::update_prefs", rename = "user")]
     pub preferences: UpdatePreferences,
-}
-
-mod update_prefs {
-    use serde::{ser::SerializeStruct, Deserialize, Deserializer, Serialize, Serializer};
-
-    use super::UpdatePreferences;
-
-    #[derive(Deserialize, Serialize)]
-    struct Wrapper {
-        preferences: UpdatePreferences,
-    }
-
-    pub fn serialize<S>(value: &UpdatePreferences, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut state = serializer.serialize_struct("user", 1)?;
-        state.serialize_field("preferences", value)?;
-        state.end()
-    }
-
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<UpdatePreferences, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let wrapper = Wrapper::deserialize(deserializer)?;
-        Ok(wrapper.preferences)
-    }
 }
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq, Default)]

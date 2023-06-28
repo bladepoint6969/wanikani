@@ -515,7 +515,7 @@ pub mod voice_actor {
     //! Available voice actors used for vocabulary reading pronunciation audio.
     pub use crate::cross_feature::Gender;
 }
-
+mod serde_helpers;
 mod cross_feature {
     use std::fmt::Display;
 
