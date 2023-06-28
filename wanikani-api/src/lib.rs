@@ -487,6 +487,9 @@ pub mod client;
 #[cfg(feature = "level_progression")]
 pub mod level_progression;
 
+#[cfg(feature = "reset")]
+pub mod reset;
+
 #[cfg(feature = "study_material")]
 pub mod study_material;
 
@@ -606,6 +609,9 @@ pub enum ResourceType {
     #[cfg(feature = "level_progression")]
     /// A `level_progression
     LevelProgression,
+    #[cfg(feature = "reset")]
+    /// A `reset`
+    Reset,
     #[cfg(feature = "study_material")]
     /// A `study_material`
     StudyMaterial,
