@@ -6,6 +6,7 @@ use url::Url;
 use uuid::Uuid;
 
 use crate::{ResourceCommon, Timestamp};
+pub use crate::cross_feature::LessonPresentationOrder;
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 /// The user summary returns basic information for the user making the API
@@ -79,19 +80,6 @@ pub struct Subscription {
     #[serde(rename = "type")]
     /// The type of subscription the user has.
     pub sub_type: SubscriptionType,
-}
-
-#[derive(Debug, Clone, Copy, Deserialize, Serialize, Default, PartialEq, Eq)]
-#[serde(rename_all = "snake_case")]
-/// The order in which lessons are presented.
-pub enum LessonPresentationOrder {
-    #[default]
-    /// Lessons are presented in order of level, then by subject `id`.
-    AscendingLevelThenSubject,
-    /// Lessons are presented in a random order.
-    Shuffled,
-    /// Lessons are presented in order of level, then randomly.
-    AscendingLevelThenShuffled,
 }
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]

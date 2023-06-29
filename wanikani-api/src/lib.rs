@@ -510,12 +510,19 @@ pub mod summary;
 
 #[cfg(feature = "user")]
 pub mod user;
+#[cfg(not(feature = "user"))]
+pub mod user {
+    //! The user summary returns basic information for the user making the API
+    //! request, identified by their API key.
+    pub use crate::cross_feature::LessonPresentationOrder;
+}
 
 #[cfg(feature = "voice_actor")]
 pub mod voice_actor;
 #[cfg(not(feature = "voice_actor"))]
 pub mod voice_actor {
     //! Available voice actors used for vocabulary reading pronunciation audio.
+
     pub use crate::cross_feature::Gender;
 }
 mod serde_helpers;
@@ -523,6 +530,49 @@ mod cross_feature {
     use std::fmt::Display;
 
     use serde::{Deserialize, Serialize};
+
+    #[derive(Debug, Clone, Copy, Deserialize, Serialize, Default, PartialEq, Eq)]
+    #[serde(rename_all = "snake_case")]
+    /// The order in which lessons are presented.
+    pub enum LessonPresentationOrder {
+        #[default]
+        /// Lessons are presented in order of level, then by subject `id`.
+        AscendingLevelThenSubject,
+        /// Lessons are presented in a random order.
+        Shuffled,
+        /// Lessons are presented in order of level, then randomly.
+        AscendingLevelThenShuffled,
+    }
+
+    #[cfg(all(feature = "lesson_order_sort"))]
+    impl LessonPresentationOrder {
+        /// Return an ordering for a pair of subjects according to the selected
+        /// presentation order and 
+        pub fn order_subjects<R: rand::Rng>(
+            &self,
+            rng: &mut R,
+            subject: &crate::subject::SubjectCommon,
+            other: &crate::subject::SubjectCommon,
+        ) -> std::cmp::Ordering {
+            use std::cmp::Ordering;
+
+            match self {
+                LessonPresentationOrder::AscendingLevelThenSubject => {
+                    match subject.level.cmp(&other.level) {
+                        Ordering::Equal => subject.lesson_position.cmp(&other.lesson_position),
+                        ord => ord,
+                    }
+                }
+                LessonPresentationOrder::AscendingLevelThenShuffled => {
+                    match subject.level.cmp(&other.level) {
+                        Ordering::Equal => rng.gen::<u32>().cmp(&rng.gen()),
+                        ord => ord,
+                    }
+                }
+                LessonPresentationOrder::Shuffled => rng.gen::<u32>().cmp(&rng.gen()),
+            }
+        }
+    }
 
     #[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
     #[serde(rename_all = "snake_case")]

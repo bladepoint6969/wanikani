@@ -1,6 +1,4 @@
 use std::{env, io::stdout};
-
-use rand::Rng;
 use serde::{Deserialize, Serialize};
 use wanikani_api::{
     client::SubjectFilter, prelude::WKClient, subject::Subject, user::LessonPresentationOrder,
@@ -40,23 +38,7 @@ async fn main() {
             Subject::Vocabulary(ref subject) => &subject.common,
         };
 
-        match user.data.preferences.lessons_presentation_order {
-            LessonPresentationOrder::AscendingLevelThenSubject => {
-                match sub_common.level.cmp(&other_common.level) {
-                    std::cmp::Ordering::Equal => sub_common
-                        .lesson_position
-                        .cmp(&other_common.lesson_position),
-                    ord => ord,
-                }
-            }
-            LessonPresentationOrder::AscendingLevelThenShuffled => {
-                match sub_common.level.cmp(&other_common.level) {
-                    std::cmp::Ordering::Equal => rng.gen::<u32>().cmp(&rng.gen()),
-                    ord => ord,
-                }
-            }
-            LessonPresentationOrder::Shuffled => rng.gen::<u32>().cmp(&rng.gen()),
-        }
+        user.data.preferences.lessons_presentation_order.order_subjects(&mut rng, sub_common, other_common)
     });
 
     let sorted = SortedSubjects {

@@ -21,6 +21,7 @@ chrono = {version = "0.4", default-features = false, features = ["serde", "clock
 log = "0.4"
 mime = "0.3"
 mime_serde_shim = "0.2"
+rand = {version = "0.8", optional = true}
 reqwest = {version = "0.11", features = ["json"], optional = true, default-features = false}
 serde = {version = "1", features = ["derive"]}
 thiserror = "1"
@@ -31,8 +32,9 @@ uuid = {version = "1", features = ["v4", "serde"]}
 client = ["reqwest"]
 default = ["client", "default-tls", "model"]
 default-tls = ["reqwest/default-tls"]
+lesson_order_sort = ["rand", "subject"]
 level_progression = []
-model = ["level_progression", "reset", "study_material", "subject", "summary", "user", "voice_actor"]
+model = ["level_progression", "reset", "study_material", "subject", "summary", "user", "voice_actor", "lesson_order_sort"]
 reset = []
 rustls-tls = ["reqwest/rustls-tls"]
 study_material = []
@@ -44,7 +46,6 @@ voice_actor = []
 [dev-dependencies]
 dotenvy = "0.15"
 env_logger = "0.10"
-rand = "0.8.5"
 serde_json = "1"
 tokio = {version = "1", features = ["macros", "time", "rt"]}
 
@@ -54,4 +55,4 @@ required-features = ["client", "subject", "default-tls"]
 
 [[example]]
 name = "sort_subjects"
-required-features = ["client", "subject", "default-tls", "user"]
+required-features = ["client", "subject", "default-tls", "user", "lesson_order_sort"]

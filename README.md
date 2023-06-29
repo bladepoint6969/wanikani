@@ -44,7 +44,14 @@ well.
 
 * `model`: Activates all of the below object models.
 
+* `lesson_order_sort`: Enables functionality for sorting subjects according to
+  a user's preferred lesson presentation order.
+
 * `level_progression`: Unlocks the level progression object model.
+
+* `reset`: Activates the reset object model.
+
+* `study_material`: Activates the study material object model.
 
 * `subject`: Activates the subject object models (radicals, kanji, and
   vocabulary).
