@@ -34,7 +34,7 @@ impl WKClient {
 
 #[cfg(test)]
 mod tests {
-    use crate::client::{init_tests, create_client};
+    use crate::client::{create_client, init_tests};
 
     #[tokio::test]
     async fn test_get_resets() {
@@ -42,10 +42,7 @@ mod tests {
 
         let client = create_client();
 
-        assert!(client
-            .get_resets(&Default::default())
-            .await
-            .is_ok());
+        assert!(client.get_resets(&Default::default()).await.is_ok());
     }
 
     #[cfg(feature = "reset")]
@@ -63,9 +60,7 @@ mod tests {
         if let Some(reset) = resets.data.get(0) {
             assert!(client.get_specific_reset(reset.id).await.is_ok());
         } else {
-            log::warn!(
-                "No resets detected, this test should not be considered reliable"
-            );
+            log::warn!("No resets detected, this test should not be considered reliable");
         }
     }
 }

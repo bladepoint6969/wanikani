@@ -20,7 +20,7 @@ impl WKClient {
 
 #[cfg(test)]
 mod tests {
-    use crate::client::{init_tests, create_client};
+    use crate::client::{create_client, init_tests};
 
     #[tokio::test]
     async fn test_get_summary() {

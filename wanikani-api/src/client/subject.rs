@@ -1,6 +1,9 @@
 use url::Url;
 
-use crate::{Timestamp, Collection, subject::{Subject, WaniKaniSubject}, Error, Resource};
+use crate::{
+    subject::{Subject, WaniKaniSubject},
+    Collection, Error, Resource, Timestamp,
+};
 
 use super::{Filter, WKClient};
 
@@ -112,7 +115,7 @@ impl Filter for SubjectFilter {
 
 #[cfg(test)]
 mod tests {
-    use crate::client::{init_tests, create_client};
+    use crate::client::{create_client, init_tests};
 
     #[tokio::test]
     async fn test_get_subjects() {

@@ -33,7 +33,7 @@ pub struct Reset {
 mod tests {
     use chrono::{DateTime, Utc};
 
-    use crate::{Resource, ResourceType, ResourceCommon};
+    use crate::{Resource, ResourceCommon, ResourceType};
 
     use super::Reset;
 
@@ -60,10 +60,16 @@ mod tests {
         );
 
         let data = reset.data;
-        assert_eq!(data.created_at, DateTime::parse_from_rfc3339("2017-12-20T00:03:56.642838Z").expect("Timestamp"));
+        assert_eq!(
+            data.created_at,
+            DateTime::parse_from_rfc3339("2017-12-20T00:03:56.642838Z").expect("Timestamp")
+        );
         assert_eq!(data.original_level, 42);
         assert_eq!(data.target_level, 8);
-        assert_eq!(data.confirmed_at.expect("Timestamp"), DateTime::parse_from_rfc3339("2017-12-19T23:31:18.077268Z").expect("Timestamp"));
+        assert_eq!(
+            data.confirmed_at.expect("Timestamp"),
+            DateTime::parse_from_rfc3339("2017-12-19T23:31:18.077268Z").expect("Timestamp")
+        );
     }
 
     #[test]
@@ -72,7 +78,7 @@ mod tests {
             created_at: Utc::now(),
             confirmed_at: Some(Utc::now()),
             original_level: 60,
-            target_level: 4
+            target_level: 4,
         };
 
         let common = ResourceCommon {
@@ -84,7 +90,7 @@ mod tests {
         let reset = Resource {
             common,
             data,
-            id: 69420
+            id: 69420,
         };
 
         let json = serde_json::to_string(&reset).expect("Serialize");

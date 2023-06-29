@@ -146,7 +146,7 @@ impl Filter for StudyMaterialFilter {
 
 #[cfg(test)]
 mod tests {
-    use crate::client::{init_tests, create_client};
+    use crate::client::{create_client, init_tests};
 
     #[tokio::test]
     async fn test_get_study_materials() {
@@ -175,9 +175,7 @@ mod tests {
         if let Some(prog) = study_materials.data.get(0) {
             assert!(client.get_specific_study_material(prog.id).await.is_ok());
         } else {
-            log::warn!(
-                "No study materials detected, this test should not be considered reliable"
-            );
+            log::warn!("No study materials detected, this test should not be considered reliable");
         }
     }
 
@@ -200,12 +198,13 @@ mod tests {
                 ..Default::default()
             };
 
-            let new_prog = client.update_study_material(prog.id, &update).await.expect("Successful Update");
+            let new_prog = client
+                .update_study_material(prog.id, &update)
+                .await
+                .expect("Successful Update");
             assert_eq!(prog, &new_prog);
         } else {
-            log::warn!(
-                "No study materials detected, this test should not be considered reliable"
-            );
+            log::warn!("No study materials detected, this test should not be considered reliable");
         }
     }
 }

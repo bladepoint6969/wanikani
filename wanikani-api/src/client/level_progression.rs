@@ -40,7 +40,7 @@ impl WKClient {
 
 #[cfg(test)]
 mod tests {
-    use crate::client::{init_tests, create_client, IdFilter};
+    use crate::client::{create_client, init_tests, IdFilter};
 
     #[tokio::test]
     async fn test_get_level_progressions() {

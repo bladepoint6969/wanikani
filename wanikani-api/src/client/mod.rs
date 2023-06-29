@@ -223,9 +223,9 @@ fn create_client() -> WKClient {
 
 #[cfg(test)]
 mod tests {
-    use crate::{URL_BASE, Collection};
+    use crate::{Collection, URL_BASE};
 
-    use super::{init_tests, create_client};
+    use super::{create_client, init_tests};
 
     #[tokio::test]
     #[ignore]
@@ -239,7 +239,9 @@ mod tests {
 
         let client = create_client();
 
-        let url = format!("{}/subjects?levels=5000", URL_BASE).parse().expect("URL");
+        let url = format!("{}/subjects?levels=5000", URL_BASE)
+            .parse()
+            .expect("URL");
 
         let error = loop {
             if let Err(e) = client.get_resource_by_url::<Collection<()>>(&url).await {
@@ -271,6 +273,9 @@ mod tests {
         )
         .await;
 
-        assert!(client.get_resource_by_url::<Collection<()>>(&url).await.is_ok())
+        assert!(client
+            .get_resource_by_url::<Collection<()>>(&url)
+            .await
+            .is_ok())
     }
 }

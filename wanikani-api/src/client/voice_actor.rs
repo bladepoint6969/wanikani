@@ -37,9 +37,12 @@ impl WKClient {
 
 #[cfg(test)]
 mod tests {
-    use chrono::{Utc, Duration};
+    use chrono::{Duration, Utc};
 
-    use crate::{client::{create_client, init_tests, IdFilter}, Timestamp};
+    use crate::{
+        client::{create_client, init_tests, IdFilter},
+        Timestamp,
+    };
 
     fn get_timestamp() -> Timestamp {
         Utc::now() - Duration::seconds(10)
