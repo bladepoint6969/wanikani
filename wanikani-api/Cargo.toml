@@ -44,9 +44,14 @@ voice_actor = []
 [dev-dependencies]
 dotenvy = "0.15"
 env_logger = "0.10"
+rand = "0.8.5"
 serde_json = "1"
 tokio = {version = "1", features = ["macros", "time", "rt"]}
 
 [[example]]
 name = "fetch_subjects"
-required-features = ["client", "subject"]
+required-features = ["client", "subject", "default-tls"]
+
+[[example]]
+name = "sort_subjects"
+required-features = ["client", "subject", "default-tls", "user"]
