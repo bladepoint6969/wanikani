@@ -2,7 +2,7 @@ use url::Url;
 
 use crate::{
     study_material::{CreateStudyMaterial, StudyMaterial, UpdateStudyMaterial},
-    Collection, Error, Resource, Timestamp, Id,
+    Collection, Error, Id, Resource, Timestamp,
 };
 
 use super::{Filter, WKClient};

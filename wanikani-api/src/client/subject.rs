@@ -2,7 +2,7 @@ use url::Url;
 
 use crate::{
     subject::{Subject, WaniKaniSubject},
-    Collection, Error, Resource, Timestamp, Id,
+    Collection, Error, Id, Resource, Timestamp,
 };
 
 use super::{Filter, WKClient};

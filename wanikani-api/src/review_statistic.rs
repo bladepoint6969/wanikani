@@ -61,7 +61,7 @@ pub struct ReviewStatistic {
 mod tests {
     use chrono::{DateTime, Utc};
 
-    use crate::{cross_feature::SubjectType, Resource, ResourceType, ResourceCommon};
+    use crate::{cross_feature::SubjectType, Resource, ResourceCommon, ResourceType};
 
     use super::ReviewStatistic;
 

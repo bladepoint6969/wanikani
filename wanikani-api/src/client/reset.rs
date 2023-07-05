@@ -1,4 +1,4 @@
-use crate::{reset::Reset, Collection, Error, Resource, Id};
+use crate::{reset::Reset, Collection, Error, Id, Resource};
 
 use super::{Filter, IdFilter, WKClient};
 

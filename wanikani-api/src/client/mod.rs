@@ -7,7 +7,7 @@ use reqwest::{header::HeaderMap, Client, RequestBuilder, Response, StatusCode};
 use serde::Deserialize;
 use url::Url;
 
-use crate::{Error, Timestamp, WanikaniError, API_VERSION, URL_BASE, Id};
+use crate::{Error, Id, Timestamp, WanikaniError, API_VERSION, URL_BASE};
 
 const REVISION_HEADER: &str = "Wanikani-Revision";
 

@@ -6,7 +6,7 @@ use url::Url;
 use uuid::Uuid;
 
 pub use crate::cross_feature::LessonPresentationOrder;
-use crate::{ResourceCommon, Timestamp, Id};
+use crate::{Id, ResourceCommon, Timestamp};
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 /// The user summary returns basic information for the user making the API

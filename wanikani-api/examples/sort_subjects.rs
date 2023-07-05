@@ -1,5 +1,5 @@
-use std::{env, io::stdout};
 use serde::{Deserialize, Serialize};
+use std::{env, io::stdout};
 use wanikani_api::{
     client::SubjectFilter, prelude::WKClient, subject::Subject, user::LessonPresentationOrder,
     Resource,
@@ -38,7 +38,10 @@ async fn main() {
             Subject::Vocabulary(ref subject) => &subject.common,
         };
 
-        user.data.preferences.lessons_presentation_order.order_subjects(&mut rng, sub_common, other_common)
+        user.data
+            .preferences
+            .lessons_presentation_order
+            .order_subjects(&mut rng, sub_common, other_common)
     });
 
     let sorted = SortedSubjects {

@@ -1,4 +1,4 @@
-use crate::{level_progression::LevelProgression, Collection, Error, Resource, Id};
+use crate::{level_progression::LevelProgression, Collection, Error, Id, Resource};
 
 use super::{Filter, IdFilter, WKClient};
 

@@ -3,7 +3,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{subject::SubjectType, Timestamp, Id};
+use crate::{subject::SubjectType, Id, Timestamp};
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 /// Study materials store user-specific notes and synonyms for a given subject.

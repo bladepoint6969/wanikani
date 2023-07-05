@@ -4,7 +4,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{ResourceCommon, Timestamp, Id};
+use crate::{Id, ResourceCommon, Timestamp};
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 /// The summary report contains currently available lessons and reviews and the

@@ -1,4 +1,4 @@
-use crate::{voice_actor::VoiceActor, Collection, Error, Resource, Id};
+use crate::{voice_actor::VoiceActor, Collection, Error, Id, Resource};
 
 use super::{Filter, IdFilter, WKClient};
 

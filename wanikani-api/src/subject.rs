@@ -27,7 +27,7 @@ use serde::{Deserialize, Serialize};
 use url::Url;
 
 pub use crate::cross_feature::*;
-use crate::{voice_actor::Gender, Timestamp, Id};
+use crate::{voice_actor::Gender, Id, Timestamp};
 
 /// The `WaniKaniSubject` trait exists to help avoid footguns when requesting
 /// specific subjects with the API client.

@@ -1,6 +1,9 @@
-use crate::{review_statistic::ReviewStatistic, Collection, Resource, Id, Error, cross_feature::SubjectType, Timestamp};
+use crate::{
+    cross_feature::SubjectType, review_statistic::ReviewStatistic, Collection, Error, Id, Resource,
+    Timestamp,
+};
 
-use super::{WKClient, Filter};
+use super::{Filter, WKClient};
 
 const STAT_PATH: &str = "review_statistics";
 
@@ -68,7 +71,10 @@ impl Filter for ReviewStatisticFilter {
 impl WKClient {
     /// Returns a collection of all review statistics, ordered by ascending
     /// `created_at`, 500 at a time.
-    pub async fn get_review_statistics(&self, filters: &ReviewStatisticFilter) -> Result<Collection<ReviewStatistic>, Error> {
+    pub async fn get_review_statistics(
+        &self,
+        filters: &ReviewStatisticFilter,
+    ) -> Result<Collection<ReviewStatistic>, Error> {
         let mut url = self.base_url.clone();
         url.path_segments_mut().expect("Valid URL").push(STAT_PATH);
 
@@ -80,7 +86,10 @@ impl WKClient {
     }
 
     /// Retrieves a specific review statistic by its `id`.
-    pub async fn get_specific_review_statistic(&self, id: Id) -> Result<Resource<ReviewStatistic>, Error> {
+    pub async fn get_specific_review_statistic(
+        &self,
+        id: Id,
+    ) -> Result<Resource<ReviewStatistic>, Error> {
         let mut url = self.base_url.clone();
         url.path_segments_mut()
             .expect("Valid URL")
@@ -103,7 +112,10 @@ mod tests {
 
         let client = create_client();
 
-        assert!(client.get_review_statistics(&Default::default()).await.is_ok());
+        assert!(client
+            .get_review_statistics(&Default::default())
+            .await
+            .is_ok());
     }
 
     #[tokio::test]
@@ -120,7 +132,9 @@ mod tests {
         if let Some(reset) = resets.data.get(0) {
             assert!(client.get_specific_review_statistic(reset.id).await.is_ok());
         } else {
-            log::warn!("No review statistics detected, this test should not be considered reliable");
+            log::warn!(
+                "No review statistics detected, this test should not be considered reliable"
+            );
         }
     }
 }
