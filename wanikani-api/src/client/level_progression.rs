@@ -1,4 +1,4 @@
-use crate::{level_progression::LevelProgression, Collection, Error, Resource};
+use crate::{level_progression::LevelProgression, Collection, Error, Resource, Id};
 
 use super::{Filter, IdFilter, WKClient};
 
@@ -24,7 +24,7 @@ impl WKClient {
     /// Retrieves a specific level progression by its id.
     pub async fn get_specific_level_progression(
         &self,
-        id: u64,
+        id: Id,
     ) -> Result<Resource<LevelProgression>, Error> {
         let mut url = self.base_url.clone();
         url.path_segments_mut()

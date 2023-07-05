@@ -481,6 +481,9 @@ use url::Url;
 /// Convenience type for working with timestamps.
 pub type Timestamp = DateTime<Utc>;
 
+/// Expressive type for IDs
+pub type Id = u64;
+
 #[cfg(feature = "client")]
 pub mod client;
 
@@ -547,7 +550,7 @@ mod cross_feature {
     #[cfg(all(feature = "lesson_order_sort"))]
     impl LessonPresentationOrder {
         /// Return an ordering for a pair of subjects according to the selected
-        /// presentation order and 
+        /// presentation order and
         pub fn order_subjects<R: rand::Rng>(
             &self,
             rng: &mut R,
@@ -723,7 +726,7 @@ pub struct Pages {
 /// Most resources returned by the WaniKani
 pub struct Resource<T> {
     /// The resource's unique ID.
-    pub id: u64,
+    pub id: Id,
     #[serde(flatten)]
     /// Common resource data.
     pub common: ResourceCommon,
@@ -740,7 +743,7 @@ pub struct Collection<T> {
     /// Pagination data for the collection
     pub pages: Pages,
     /// The total count of resources in the collection
-    pub total_count: u64,
+    pub total_count: Id,
     /// The collection's data
     pub data: Vec<Resource<T>>,
 }

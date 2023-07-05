@@ -3,7 +3,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{subject::SubjectType, Timestamp};
+use crate::{subject::SubjectType, Timestamp, Id};
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 /// Study materials store user-specific notes and synonyms for a given subject.
@@ -22,7 +22,7 @@ pub struct StudyMaterial {
     /// Free form note related to the reading(s) of the associated subject.
     pub reading_note: Option<String>,
     /// Unique identifier of the associated subject.
-    pub subject_id: u64,
+    pub subject_id: Id,
     /// The type of the associated subject.
     pub subject_type: SubjectType,
 }
@@ -37,7 +37,7 @@ pub struct StudyMaterial {
 /// The owner of the api key can only create one study_material per subject_id.
 pub struct CreateStudyMaterial {
     /// Unique identifier of the subject.
-    pub subject_id: u64,
+    pub subject_id: Id,
     /// Meaning notes specific for the subject.
     pub meaning_note: Option<String>,
     /// Reading notes specific for the subject.

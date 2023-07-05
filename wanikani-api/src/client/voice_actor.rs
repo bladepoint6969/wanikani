@@ -1,4 +1,4 @@
-use crate::{voice_actor::VoiceActor, Collection, Error, Resource};
+use crate::{voice_actor::VoiceActor, Collection, Error, Resource, Id};
 
 use super::{Filter, IdFilter, WKClient};
 
@@ -22,7 +22,7 @@ impl WKClient {
     }
 
     /// Retrieves a specific voice_actor by its `id`.
-    pub async fn get_specific_voice_actor(&self, id: u64) -> Result<Resource<VoiceActor>, Error> {
+    pub async fn get_specific_voice_actor(&self, id: Id) -> Result<Resource<VoiceActor>, Error> {
         let mut url = self.base_url.clone();
         url.path_segments_mut()
             .expect("Valid URL")

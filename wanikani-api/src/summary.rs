@@ -4,7 +4,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{ResourceCommon, Timestamp};
+use crate::{ResourceCommon, Timestamp, Id};
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 /// The summary report contains currently available lessons and reviews and the
@@ -38,7 +38,7 @@ pub struct ReviewLessonSummary {
     /// timestamps are the top of an hour.
     pub available_at: Timestamp,
     /// Collection of unique identifiers for `subjects`.
-    pub subject_ids: Vec<u64>,
+    pub subject_ids: Vec<Id>,
 }
 
 #[cfg(test)]

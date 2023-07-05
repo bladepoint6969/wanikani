@@ -27,7 +27,7 @@ use serde::{Deserialize, Serialize};
 use url::Url;
 
 pub use crate::cross_feature::*;
-use crate::{voice_actor::Gender, Timestamp};
+use crate::{voice_actor::Gender, Timestamp, Id};
 
 /// The `WaniKaniSubject` trait exists to help avoid footguns when requesting
 /// specific subjects with the API client.
@@ -226,7 +226,7 @@ pub struct SubjectCommon {
     /// their characters.
     pub slug: String,
     /// Unique identifier of the associated spaced repetition system
-    pub spaced_repetition_system_id: u64,
+    pub spaced_repetition_system_id: Id,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
@@ -270,7 +270,7 @@ pub struct Radical {
     pub common: SubjectCommon,
     /// An array of numeric identifiers for the kanji that have the radical as a
     /// component.
-    pub amalgamation_subject_ids: Vec<u64>,
+    pub amalgamation_subject_ids: Vec<Id>,
     /// Unlike kanji and vocabulary, radicals can have a `nul` value for
     /// `characters`. Not all radicals have a UTF entry, so the radical must be
     /// visually represented with an image instead.
@@ -322,13 +322,13 @@ pub struct Kanji {
     pub common: SubjectCommon,
     /// An array of numeric identifiers for the vocabulary that have the kanji
     /// as a component.
-    pub amalgamation_subject_ids: Vec<u64>,
+    pub amalgamation_subject_ids: Vec<Id>,
     /// The UTF-8 characters for the subject, including kanji and hiragana.
     pub characters: String,
     /// An array of numeric identifiers for the radicals that make up this
     /// kanji. Note that these are the subjects that must have passed
     /// assignments in order to unlock this subject's assignment.
-    pub component_subject_ids: Vec<u64>,
+    pub component_subject_ids: Vec<Id>,
     /// Meaning hint for the kanji.
     pub meaning_hint: Option<String>,
     /// Reading hint for the kanji.
@@ -338,7 +338,7 @@ pub struct Kanji {
     /// Selected readings for the kanji.
     pub readings: Vec<KanjiReading>,
     /// An array of numeric identifiers for kanji which are visually similar to the kanji in question.
-    pub visually_similar_subject_ids: Vec<u64>,
+    pub visually_similar_subject_ids: Vec<Id>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
@@ -379,7 +379,7 @@ pub struct Vocabulary {
     /// An array of numeric identifiers for the kanji that make up this
     /// vocabulary. Note that these are the subjects that must be have passed
     /// assignments in order to unlock this subject's assignment.
-    pub component_subject_ids: Vec<u64>,
+    pub component_subject_ids: Vec<Id>,
     /// A collection of context sentences.
     pub context_sentences: Vec<ContextSentence>,
     /// Parts of speech.
@@ -431,11 +431,11 @@ pub struct AudioMetadata {
     /// The gender of the voice actor.
     pub gender: Gender,
     /// A unique ID shared between same source pronunciation audio.
-    pub source_id: u64,
+    pub source_id: Id,
     /// Vocabulary being pronounced in kana.
     pub pronunciation: String,
     /// A unique ID belonging to the voice actor.
-    pub voice_actor_id: u64,
+    pub voice_actor_id: Id,
     /// Humanized name of the voice actor.
     pub voice_actor_name: String,
     /// Description of the voice.

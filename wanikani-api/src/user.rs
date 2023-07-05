@@ -5,8 +5,8 @@ use serde::{Deserialize, Serialize};
 use url::Url;
 use uuid::Uuid;
 
-use crate::{ResourceCommon, Timestamp};
 pub use crate::cross_feature::LessonPresentationOrder;
+use crate::{ResourceCommon, Timestamp, Id};
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 /// The user summary returns basic information for the user making the API
@@ -46,7 +46,7 @@ pub struct UserData {
 pub struct Preferences {
     /// The voice actor to be used for lessons and reviews. The value is
     /// associated to `subject.pronunciation_audios.metadata.voice_actor_id`.
-    pub default_voice_actor_id: u64,
+    pub default_voice_actor_id: Id,
     /// Automatically play pronunciation audio for vocabulary during extra
     /// study.
     pub extra_study_autoplay_audio: bool,
@@ -115,7 +115,7 @@ pub struct UpdateUser {
 pub struct UpdatePreferences {
     #[serde(skip_serializing_if = "Option::is_none")]
     /// The voice actor to be used for lessons and reviews.
-    pub default_voice_actor_id: Option<u64>,
+    pub default_voice_actor_id: Option<Id>,
     #[serde(skip_serializing_if = "Option::is_none")]
     /// Automatically play pronunciation audio for vocabulary during extra
     /// study.

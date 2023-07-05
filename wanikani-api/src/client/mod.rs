@@ -7,7 +7,7 @@ use reqwest::{header::HeaderMap, Client, RequestBuilder, Response, StatusCode};
 use serde::Deserialize;
 use url::Url;
 
-use crate::{Error, Timestamp, WanikaniError, API_VERSION, URL_BASE};
+use crate::{Error, Timestamp, WanikaniError, API_VERSION, URL_BASE, Id};
 
 const REVISION_HEADER: &str = "Wanikani-Revision";
 
@@ -19,7 +19,7 @@ pub(crate) trait Filter {
 /// Filter parameters for voice actor collections
 pub struct IdFilter {
     /// Only resources where `data.id` matches one of the array values are returned.
-    pub ids: Option<Vec<u64>>,
+    pub ids: Option<Vec<Id>>,
     /// Only resources updated after this time are returned.
     pub updated_after: Option<Timestamp>,
 }

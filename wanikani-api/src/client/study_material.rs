@@ -2,7 +2,7 @@ use url::Url;
 
 use crate::{
     study_material::{CreateStudyMaterial, StudyMaterial, UpdateStudyMaterial},
-    Collection, Error, Resource, Timestamp,
+    Collection, Error, Resource, Timestamp, Id,
 };
 
 use super::{Filter, WKClient};
@@ -31,7 +31,7 @@ impl WKClient {
     /// Retrieves a specific study material by its `id`.
     pub async fn get_specific_study_material(
         &self,
-        id: u64,
+        id: Id,
     ) -> Result<Resource<StudyMaterial>, Error> {
         let mut url = self.base_url.clone();
         url.path_segments_mut()
@@ -65,7 +65,7 @@ impl WKClient {
     /// Updates a study material for a specific `id`.
     pub async fn update_study_material(
         &self,
-        id: u64,
+        id: Id,
         material: &UpdateStudyMaterial,
     ) -> Result<Resource<StudyMaterial>, Error> {
         let mut url = self.base_url.clone();
@@ -89,10 +89,10 @@ pub struct StudyMaterialFilter {
     pub hidden: Option<bool>,
     /// Only study material records where `data.id` matches one of the array
     /// values are returned.
-    pub ids: Option<Vec<u64>>,
+    pub ids: Option<Vec<Id>>,
     /// Only study material records where `data.subject_id` matches one of the
     /// array values are returned.
-    pub subject_ids: Option<Vec<u64>>,
+    pub subject_ids: Option<Vec<Id>>,
     /// Only study material records where `data.subject_type` matches one of the
     /// array values are returned.
     pub subject_types: Option<Vec<crate::subject::SubjectType>>,

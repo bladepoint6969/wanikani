@@ -2,7 +2,7 @@ use url::Url;
 
 use crate::{
     subject::{Subject, WaniKaniSubject},
-    Collection, Error, Resource, Timestamp,
+    Collection, Error, Resource, Timestamp, Id,
 };
 
 use super::{Filter, WKClient};
@@ -32,7 +32,7 @@ impl WKClient {
     /// response depends on the subject type.
     pub async fn get_specific_subject<T: WaniKaniSubject>(
         &self,
-        id: u64,
+        id: Id,
     ) -> Result<Resource<T>, Error> {
         let mut url = self.base_url.clone();
         url.path_segments_mut()
@@ -51,7 +51,7 @@ impl WKClient {
 pub struct SubjectFilter {
     /// Only subjects where `data.id` matches one of the array values are
     /// returned.
-    pub ids: Option<Vec<u64>>,
+    pub ids: Option<Vec<Id>>,
     /// Return subjects of the specified types.
     pub types: Option<Vec<crate::subject::SubjectType>>,
     /// Return subjects of the specified slug.

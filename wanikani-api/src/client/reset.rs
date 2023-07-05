@@ -1,4 +1,4 @@
-use crate::{reset::Reset, Collection, Error, Resource};
+use crate::{reset::Reset, Collection, Error, Resource, Id};
 
 use super::{Filter, IdFilter, WKClient};
 
@@ -19,7 +19,7 @@ impl WKClient {
     }
 
     /// Retrieves a specific reset by its `id`.
-    pub async fn get_specific_reset(&self, id: u64) -> Result<Resource<Reset>, Error> {
+    pub async fn get_specific_reset(&self, id: Id) -> Result<Resource<Reset>, Error> {
         let mut url = self.base_url.clone();
         url.path_segments_mut()
             .expect("Valid URL")
