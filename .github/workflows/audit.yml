@@ -5,11 +5,13 @@ on:
     paths:
       - '**/Cargo.toml'
       - '**/Cargo.lock'
-  schedule: [cron: "0 0 * * SUN"]
+  schedule: [cron: "0 0 * * *"]
   workflow_dispatch:
 
 permissions:
   contents: read
+  issues: write
+  checks: write
 
 jobs:
   security_audit:
