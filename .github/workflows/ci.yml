@@ -32,12 +32,8 @@ jobs:
           RUST_LOG: info
 
   test:
-    name: Test suite [${{matrix.runner}}]
-    runs-on: ${{matrix.runner}}
-    strategy:
-      fail-fast: false
-      matrix:
-        runner: [ubuntu-latest, windows-latest]
+    name: Test Suite
+    runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v3
@@ -45,12 +41,13 @@ jobs:
       - run: cargo test --no-default-features --features model
 
   build:
-    name: Rust ${{matrix.rust}}
-    runs-on: ubuntu-latest
+    name: Rust ${{matrix.rust}} [${{matrix.runner}}]
+    runs-on: ${{matrix.runner}}
     strategy:
       fail-fast: false
       matrix:
         rust: [1.62.1, stable]
+        runner: [ubuntu-latest, windows-latest]
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v3
