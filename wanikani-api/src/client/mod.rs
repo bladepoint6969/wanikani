@@ -49,6 +49,9 @@ mod level_progression;
 #[cfg(feature = "reset")]
 mod reset;
 
+#[cfg(feature = "review_statistic")]
+mod review_statistic;
+
 #[cfg(feature = "study_material")]
 mod study_material;
 
