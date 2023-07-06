@@ -891,12 +891,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rustsec-example-crate"
-version = "0.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c2ec2f8f9fb68b5ca851757602ccfee878f01d6cfa1cfa48b394992525f52e75"
-
-[[package]]
 name = "ryu"
 version = "1.0.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1242,7 +1236,6 @@ dependencies = [
  "mime_serde_shim",
  "rand",
  "reqwest",
- "rustsec-example-crate",
  "serde",
  "serde_json",
  "thiserror",
