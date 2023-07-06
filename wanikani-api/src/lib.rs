@@ -833,7 +833,7 @@ pub const URL_BASE: &str = "https://api.wanikani.com/v2";
 /// A convenience module appropriate for glob imports (use wanikani_api::prelude::*;).
 pub mod prelude {
     #[cfg(feature = "client")]
-    pub use crate::client::WKClient;
+    pub use crate::client::{WKClient, WKClientBuilder};
     #[cfg(feature = "client")]
     pub use reqwest;
 

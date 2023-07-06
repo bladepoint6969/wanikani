@@ -3,6 +3,7 @@
 use std::{any::type_name, fmt::Debug};
 
 use chrono::{DateTime, NaiveDateTime, Utc};
+use derive_builder::Builder;
 use reqwest::{header::HeaderMap, Client, RequestBuilder, Response, StatusCode};
 use serde::Deserialize;
 use url::Url;
@@ -74,10 +75,16 @@ mod user;
 mod voice_actor;
 
 /// The WaniKani client struct performs requests to the API.
+#[derive(Builder)]
 pub struct WKClient {
+    #[builder(setter(skip), default = "URL_BASE.parse().expect(\"Valid URL\")")]
     base_url: Url,
+    /// The V2 API token the client should use
     token: String,
+    /// The reqwest [`Client`] to use for performing HTTP requests
+    #[builder(default)]
     client: Client,
+    #[builder(setter(skip), default = "API_VERSION")]
     version: &'static str,
 }
 
@@ -226,9 +233,11 @@ fn create_client() -> WKClient {
 
 #[cfg(test)]
 mod tests {
+    use reqwest::ClientBuilder;
+
     use crate::{Collection, URL_BASE};
 
-    use super::{create_client, init_tests};
+    use super::{create_client, init_tests, WKClientBuilder};
 
     #[tokio::test]
     #[ignore]
@@ -280,5 +289,26 @@ mod tests {
             .get_resource_by_url::<Collection<()>>(&url)
             .await
             .is_ok())
+    }
+
+    #[test]
+    fn test_builder() {
+        WKClientBuilder::default()
+            .build()
+            .expect_err("Missing token");
+        WKClientBuilder::default()
+            .token("SomeToken".into())
+            .build()
+            .expect("Client with default client");
+        WKClientBuilder::default()
+            .token("SomeToken".into())
+            .client(
+                ClientBuilder::default()
+                    .user_agent("test_agent")
+                    .build()
+                    .expect("Reqwest client"),
+            )
+            .build()
+            .expect("Client with custom client");
     }
 }
