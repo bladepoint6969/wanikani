@@ -44,6 +44,12 @@ impl Filter for IdFilter {
     }
 }
 
+#[cfg(feature = "assignment")]
+mod assignment;
+
+#[cfg(feature = "assignment")]
+pub use assignment::AssignmentFilter;
+
 #[cfg(feature = "level_progression")]
 mod level_progression;
 

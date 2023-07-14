@@ -484,6 +484,9 @@ pub type Timestamp = DateTime<Utc>;
 /// Expressive type for IDs
 pub type Id = u64;
 
+#[cfg(feature = "assignment")]
+pub mod assignment;
+
 #[cfg(feature = "client")]
 pub mod client;
 
@@ -550,7 +553,7 @@ mod cross_feature {
         AscendingLevelThenShuffled,
     }
 
-    #[cfg(all(feature = "lesson_order_sort"))]
+    #[cfg(feature = "lesson_order_sort")]
     impl LessonPresentationOrder {
         /// Return an ordering for a pair of subjects according to the selected
         /// presentation order and
@@ -660,6 +663,9 @@ mod cross_feature {
 #[serde(rename_all = "snake_case")]
 /// Possible resource types
 pub enum ResourceType {
+    #[cfg(feature = "assignment")]
+    /// An `assignment`
+    Assignment,
     /// A `collection`
     Collection,
     #[cfg(feature = "level_progression")]
