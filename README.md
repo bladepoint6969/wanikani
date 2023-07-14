@@ -75,8 +75,10 @@ The minimum supported Rust toolchain version is currently **Rust 1.62.1**.
   ([LICENSE-MIT](https://github.com/bladepoint6969/wanikani/blob/HEAD/LICENSE-MIT))
 
 [Actions]: https://github.com/bladepoint6969/WaniKani/actions/workflows/ci.yml
-[CI]: https://github.com/bladepoint6969/WaniKani/workflows/CI/badge.svg
+[CI]: https://github.com/bladepoint6969/WaniKani/workflows/CI/badge.svg?
 [crates.io]: https://crates.io/crates/wanikani-api
 [docs.rs]: https://docs.rs/wanikani-api
-[License]: https://img.shields.io/crates/l/wanikani-api.svg
+[License]: https://img.shields.io/crates/l/wanikani-api.svg?
 [`reqwest`]: https://crates.io/crates/reqwest
+[Latest Version]: https://img.shields.io/crates/v/wanikani-ap.svg?
+[Documentation]: https://img.shields.io/docsrs/wanikani-api/latest?
