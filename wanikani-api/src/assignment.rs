@@ -66,7 +66,7 @@ pub struct AssignmentStart {
 mod tests {
     use chrono::{DateTime, Utc};
 
-    use crate::{cross_feature::SubjectType, Resource, ResourceType, ResourceCommon};
+    use crate::{cross_feature::SubjectType, Resource, ResourceCommon, ResourceType};
 
     use super::Assignment;
 
@@ -103,10 +103,19 @@ mod tests {
             data.unlocked_at.expect("Timestamp"),
             DateTime::parse_from_rfc3339("2017-09-05T23:38:10.695133Z").expect("Timestamp")
         );
-        assert_eq!(data.started_at.expect("Timestamp"), DateTime::parse_from_rfc3339("2017-09-05T23:41:28.980679Z").expect("Timestamp"));
-        assert_eq!(data.passed_at.expect("Timestamp"), DateTime::parse_from_rfc3339("2017-09-07T17:14:14.491889Z").expect("Timestamp"));
+        assert_eq!(
+            data.started_at.expect("Timestamp"),
+            DateTime::parse_from_rfc3339("2017-09-05T23:41:28.980679Z").expect("Timestamp")
+        );
+        assert_eq!(
+            data.passed_at.expect("Timestamp"),
+            DateTime::parse_from_rfc3339("2017-09-07T17:14:14.491889Z").expect("Timestamp")
+        );
         assert!(data.burned_at.is_none());
-        assert_eq!(data.available_at.expect("Timestamp"), DateTime::parse_from_rfc3339("2018-02-27T00:00:00.000000Z").expect("Timestamp"));
+        assert_eq!(
+            data.available_at.expect("Timestamp"),
+            DateTime::parse_from_rfc3339("2018-02-27T00:00:00.000000Z").expect("Timestamp")
+        );
         assert!(data.resurrected_at.is_none());
         assert!(!data.hidden);
     }
@@ -139,7 +148,8 @@ mod tests {
 
         let json = serde_json::to_string(&assignment).expect("Serialize");
 
-        let new_assignment: Resource<Assignment> = serde_json::from_str(&json).expect("Deserialize");
+        let new_assignment: Resource<Assignment> =
+            serde_json::from_str(&json).expect("Deserialize");
 
         assert_eq!(assignment, new_assignment);
     }
