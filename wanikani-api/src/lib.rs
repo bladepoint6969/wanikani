@@ -574,11 +574,11 @@ mod cross_feature {
                 }
                 LessonPresentationOrder::AscendingLevelThenShuffled => {
                     match subject.level.cmp(&other.level) {
-                        Ordering::Equal => rng.gen::<u32>().cmp(&rng.gen()),
+                        Ordering::Equal => rng.next_u32().cmp(&rng.next_u32()),
                         ord => ord,
                     }
                 }
-                LessonPresentationOrder::Shuffled => rng.gen::<u32>().cmp(&rng.gen()),
+                LessonPresentationOrder::Shuffled => rng.next_u32().cmp(&rng.next_u32()),
             }
         }
     }

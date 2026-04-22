@@ -140,9 +140,7 @@ impl WKClient {
             }
         };
 
-        let naive_datetime =
-            NaiveDateTime::from_timestamp_millis(reset * MILLIS_IN_SECOND).expect("Valid range");
-        DateTime::from_utc(naive_datetime, Utc)
+        DateTime::from_timestamp_millis(reset * MILLIS_IN_SECOND).expect("Valid range")
     }
 
     async fn handle_error(&self, response: Response) -> Error {

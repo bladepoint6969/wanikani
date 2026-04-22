@@ -21,7 +21,7 @@ async fn main() {
     let user = client.get_user_information().await.expect("User prefs");
 
     let mut subjects = client.get_subjects(filters).await.expect("subjects").data;
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     subjects.sort_by(|subject, other| {
         let sub_common = match subject.data {
